@@ -10,10 +10,6 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-<!--
-    <maven.javaapp.mainclass>org.apache.cassandra.CassandraGUI</maven.javaapp.mainclass>
-    <maven.javaapp.jar.name>cassandra-gui.jar</maven.javaapp.jar.name>
--->
   </properties>
 
   <build>
@@ -29,16 +25,6 @@
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
-<!--
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javaapp-plugin</artifactId>
-        <configuration>
-          <source>1.4</source>
-          <target>1.4</target>
-        </configuration>
-      </plugin>
--->
     </plugins>
   </build>
 
@@ -51,19 +37,24 @@
     </dependency>
 
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.14</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <version>1.5.10</version>
     </dependency>
     <dependency>
-      <groupId>slf4j</groupId>
-      <artifactId>api</artifactId>
-      <version>1.5.8</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.5.10</version>
     </dependency>
     <dependency>
-      <groupId>slf4j</groupId>
-      <artifactId>log4j12</artifactId>
-      <version>1.5.8</version>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>0.9.18</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>0.9.18</version>
     </dependency>
 
     <dependency>
@@ -72,7 +63,7 @@
       <version>1.4</version>
     </dependency>
  
-    	<dependency>
+    <dependency>
       <groupId>org.apache.thrift</groupId>
         <artifactId>libthrift</artifactId>
         <scope>system</scope>
