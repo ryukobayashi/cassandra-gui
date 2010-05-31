@@ -126,7 +126,7 @@ public class Client {
                     for (Column col : scol.getColumns()) {
                         Cell c = new Cell(new String(col.getName(), "UTF8"),
                                           new String(col.getValue(), "UTF8"),
-                                          new Date(col.getTimestamp()));
+                                          new Date(col.getTimestamp() / 1000));
                         s.getCells().add(c);
                     }
 
@@ -135,7 +135,7 @@ public class Client {
                     Column col = columns.getColumn();
                     Cell c = new Cell(new String(col.getName(), "UTF8"),
                                       new String(col.getValue(), "UTF8"),
-                                      new Date(col.getTimestamp()));
+                                      new Date(col.getTimestamp() / 1000));
                     key.getCells().add(c);
                 }
             }
