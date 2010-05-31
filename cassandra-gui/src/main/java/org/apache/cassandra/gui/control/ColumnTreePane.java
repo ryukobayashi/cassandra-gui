@@ -42,7 +42,7 @@ public class ColumnTreePane extends JPanel implements TreeSelectionListener {
         if (scrollPane != null) {
             int width =
                 getParent() == null || getParent().getWidth() == 0 ?
-                        655 : getParent().getWidth() - 10;
+                        650 : getParent().getWidth() - 150;
             int height =
                 getParent() == null || getParent().getHeight() == 0 ?
                         615 : getParent().getHeight() - 15;

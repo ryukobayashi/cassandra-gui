@@ -102,7 +102,7 @@ public class Client {
 
         ColumnParent columnParent = new ColumnParent(columnFamily);
 
-        KeyRange keyRange = new KeyRange();
+        KeyRange keyRange = new KeyRange(rows);
         keyRange.setStart_key(startKey);
         keyRange.setEnd_key(endKey);
 
@@ -113,9 +113,8 @@ public class Client {
         SlicePredicate slicePredicate = new SlicePredicate();
         slicePredicate.setSlice_range(sliceRange);
 
-        
         List<KeySlice> keySlices =
-            client.get_range_slices(keyspace, columnParent, slicePredicate, keyRange, ConsistencyLevel.QUORUM);
+            client.get_range_slices(keyspace, columnParent, slicePredicate, keyRange, ConsistencyLevel.ONE);
         for (KeySlice keySlice : keySlices) {
             Key key = new Key(keySlice.getKey(), new ArrayList<SColumn>(), new ArrayList<Cell>());
 
