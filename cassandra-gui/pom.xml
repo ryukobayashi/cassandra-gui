@@ -11,8 +11,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 <!--
-    <maven.javaapp.mainclass>jp.co.brainpad.toscana.visualizer.Visualizer</maven.javaapp.mainclass>
-    <maven.javaapp.jar.name>toscana-visualizer.jar</maven.javaapp.jar.name>
+    <maven.javaapp.mainclass>org.apache.cassandra.CassandraGUI</maven.javaapp.mainclass>
+    <maven.javaapp.jar.name>cassandra-gui.jar</maven.javaapp.jar.name>
 -->
   </properties>
 
