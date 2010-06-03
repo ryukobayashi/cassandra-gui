@@ -62,12 +62,14 @@ public class Client {
             protocol = new TBinaryProtocol(transport);
             client = new Cassandra.Client(protocol);
             transport.open();
+            connected = true;
         }
     }
 
     public void disconnect() {
         if (connected) {
             transport.close();
+            connected = false;
         }
     }
 
