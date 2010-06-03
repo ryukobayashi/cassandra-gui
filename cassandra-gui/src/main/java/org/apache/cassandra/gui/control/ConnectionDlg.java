@@ -20,13 +20,23 @@ import org.apache.thrift.transport.TTransportException;
 public class ConnectionDlg extends JDialog {
     private static final long serialVersionUID = 8707158056959280058L;
 
+    private class EnterAction implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            enterAction();
+        }
+    }
+
     private Client client;
+    private JButton ok = new JButton("OK");
+    private JTextField hostText = new JTextField();
+    private JTextField portText = new JTextField();
 
     public ConnectionDlg(JFrame owner){
         super(owner);
 
-        final JTextField hostText = new JTextField();
-        final JTextField portText = new JTextField();
+        hostText.addActionListener(new EnterAction());
+        portText.addActionListener(new EnterAction());
 
         JPanel inputPanel = new JPanel(new GridLayout(2, 2));
         inputPanel.add(new JLabel("host:"));
@@ -34,31 +44,10 @@ public class ConnectionDlg extends JDialog {
         inputPanel.add(new JLabel("port:"));
         inputPanel.add(portText);
 
-        JButton ok = new JButton("OK");
         ok.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (hostText.getText().isEmpty()){
-                    JOptionPane.showMessageDialog(null, "enter host name.");
-                    return;
-                }
-
-                String host = hostText.getText();
-                int port =
-                    portText.getText().isEmpty() ?
-                            Client.DEFAULT_THRIFT_PORT :
-                            Integer.valueOf(portText.getText());
-
-                client = new Client(host, port);
-                try {
-                    client.connect();
-                } catch (TTransportException e1) {
-                    JOptionPane.showMessageDialog(null, "connection faild.");
-                    e1.printStackTrace();
-                    return;
-                }
-
-                setVisible(false);
+                enterAction();
             }
         });
         JButton cancel = new JButton("Cancel");
@@ -86,6 +75,30 @@ public class ConnectionDlg extends JDialog {
         setTitle("Connect");
         setLocationRelativeTo(null);
         setVisible(true);
+    }
+
+    private void enterAction() {
+        if (hostText.getText().isEmpty()){
+            JOptionPane.showMessageDialog(null, "enter host name.");
+            return;
+        }
+
+        String host = hostText.getText();
+        int port =
+            portText.getText().isEmpty() ?
+                    Client.DEFAULT_THRIFT_PORT :
+                    Integer.valueOf(portText.getText());
+
+        client = new Client(host, port);
+        try {
+            client.connect();
+        } catch (TTransportException e1) {
+            JOptionPane.showMessageDialog(null, "connection faild.");
+            e1.printStackTrace();
+            return;
+        }
+
+        setVisible(false);
     }
 
     /**
