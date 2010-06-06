@@ -2,7 +2,7 @@ package org.apache.cassandra.gui.control;
 
 import java.awt.Dimension;
 import java.text.SimpleDateFormat;
-import java.util.List;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -16,6 +16,7 @@ import org.apache.cassandra.Cell;
 import org.apache.cassandra.Key;
 import org.apache.cassandra.SColumn;
 import org.apache.cassandra.client.Client;
+import org.apache.cassandra.gui.control.callback.RepaintCallback;
 
 public class ColumnTreePane extends JPanel implements TreeSelectionListener {
     private static final long serialVersionUID = -4236268406209844637L;
@@ -23,6 +24,7 @@ public class ColumnTreePane extends JPanel implements TreeSelectionListener {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
 
     private Client client;
+    private RepaintCallback rCallback;
     private JScrollPane scrollPane;
     private JTree tree;
 
@@ -39,16 +41,12 @@ public class ColumnTreePane extends JPanel implements TreeSelectionListener {
 
     @Override
     public void repaint() {
-        if (scrollPane != null) {
-            int width =
-                getParent() == null || getParent().getWidth() == 0 ?
-                        650 : getParent().getWidth() - 150;
-            int height =
-                getParent() == null || getParent().getHeight() == 0 ?
-                        615 : getParent().getHeight() - 15;
-            scrollPane.setPreferredSize(new Dimension(width, height));
+        if (scrollPane != null && rCallback != null) {
+            Dimension d = rCallback.callback();
+            scrollPane.setPreferredSize(new Dimension((int) d.getWidth() - 10,
+                                                      (int) d.getHeight() - 10));
+            scrollPane.repaint();
         }
-
         super.repaint();
     }
 
@@ -59,23 +57,27 @@ public class ColumnTreePane extends JPanel implements TreeSelectionListener {
         tree.setRootVisible(true);
 
         try {
-            List<Key> l =
+            Map<String, Key> l =
                 client.listKeyAndValues(keyspaceName, columnFamilyName, startKey, endKey, rows);
-            for (Key k : l) {
+            for (String keyName : l.keySet()) {
+                Key k = l.get(keyName);
                 DefaultMutableTreeNode keyNode = new DefaultMutableTreeNode(k.getName());
                 columnFamilyNode.add(keyNode);
                 if (k.isSuperColumn()) {
-                    for (SColumn sc : k.getSColumns()) {
+                    for (String sName : k.getSColumns().keySet()) {
+                        SColumn sc = k.getSColumns().get(sName);
                         DefaultMutableTreeNode scNode = new DefaultMutableTreeNode(sc.getName());
                         keyNode.add(scNode);
-                        for (Cell c : sc.getCells()) {
+                        for (String cName : sc.getCells().keySet()) {
+                            Cell c = sc.getCells().get(cName);
                             DefaultMutableTreeNode cellNode =
                                 new DefaultMutableTreeNode(c.getName() + "=" + c.getValue() + ", " + DATE_FORMAT.format(c.getDate()));
                             scNode.add(cellNode);
                         }
                     }
                 } else {
-                    for (Cell c : k.getCells()) {
+                    for (String cName : k.getCells().keySet()) {
+                        Cell c = k.getCells().get(cName);
                         DefaultMutableTreeNode cellNode =
                             new DefaultMutableTreeNode(c.getName() + "=" + c.getValue() + ", " + DATE_FORMAT.format(c.getDate()));
                         keyNode.add(cellNode);
@@ -89,5 +91,12 @@ public class ColumnTreePane extends JPanel implements TreeSelectionListener {
 
         scrollPane.getViewport().setView(tree);
         repaint();
+    }
+
+    /**
+     * @param rCallback the rCallback to set
+     */
+    public void setrCallback(RepaintCallback rCallback) {
+        this.rCallback = rCallback;
     }
 }

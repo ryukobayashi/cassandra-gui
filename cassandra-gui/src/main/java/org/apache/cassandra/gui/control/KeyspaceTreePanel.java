@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -22,6 +23,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.apache.cassandra.client.Client;
+import org.apache.cassandra.gui.control.callback.RepaintCallback;
 import org.apache.cassandra.gui.control.callback.SelectedColumnFamilyCallback;
 import org.apache.cassandra.thrift.NotFoundException;
 import org.apache.thrift.TException;
@@ -61,11 +63,11 @@ public class KeyspaceTreePanel extends JPanel {
                 endKey = krd.getEndKey();
             }
 
-            callback.callback(lastSelectedKeysapce,
-                              lastSelectedColumnFamily,
-                              startKey,
-                              endKey,
-                              ROWS_1000);
+            cCallback.callback(lastSelectedKeysapce,
+                               lastSelectedColumnFamily,
+                               startKey,
+                               endKey,
+                               ROWS_1000);
         }
     }
 
@@ -98,7 +100,8 @@ public class KeyspaceTreePanel extends JPanel {
         }
     }
 
-    private SelectedColumnFamilyCallback callback;
+    private SelectedColumnFamilyCallback cCallback;
+    private RepaintCallback rCallback;
 
     private Map<String, String> keyspaceMap = new HashMap<String, String>();
     private JScrollPane scrollPane;
@@ -120,8 +123,7 @@ public class KeyspaceTreePanel extends JPanel {
                 DefaultMutableTreeNode keyspaceNode = new DefaultMutableTreeNode(keyspace);
                 clusterNode.add(keyspaceNode);
                 try {
-                    List<String> cfs = client.getColumnFamilys(keyspace);
-                    Collections.sort(cfs);
+                    Set<String> cfs = client.getColumnFamilys(keyspace);
                     for (String columnFamily : cfs) {
                         keyspaceNode.add(new DefaultMutableTreeNode(columnFamily));
                         keyspaceMap.put(columnFamily, keyspace);
@@ -145,21 +147,26 @@ public class KeyspaceTreePanel extends JPanel {
 
     @Override
     public void repaint() {
-        if (scrollPane != null) {
-            int height =
-                getParent() == null || getParent().getHeight() == 0 ?
-                        615 : getParent().getHeight() - 15;
-            scrollPane.setPreferredSize(new Dimension(180, height));
+        if (scrollPane != null && rCallback != null) {
+            Dimension d = rCallback.callback();
+            scrollPane.setPreferredSize(new Dimension((int) d.getWidth() - 10,
+                                                      (int) d.getHeight() - 10));
             scrollPane.repaint();
         }
-
         super.repaint();
     }
 
     /**
-     * @param callback the callback to set
+     * @param cCallback the cCallback to set
      */
-    public void setCallback(SelectedColumnFamilyCallback callback) {
-        this.callback = callback;
+    public void setcCallback(SelectedColumnFamilyCallback cCallback) {
+        this.cCallback = cCallback;
+    }
+
+    /**
+     * @param rCallback the rCallback to set
+     */
+    public void setrCallback(RepaintCallback rCallback) {
+        this.rCallback = rCallback;
     }
 }

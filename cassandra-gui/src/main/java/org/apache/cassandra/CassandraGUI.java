@@ -1,12 +1,16 @@
 package org.apache.cassandra;
 
-import java.awt.BorderLayout;
+
+import java.awt.Dimension;
+import java.awt.Toolkit;
 
 import javax.swing.JFrame;
+import javax.swing.JSplitPane;
 
 import org.apache.cassandra.gui.control.ColumnTreePane;
 import org.apache.cassandra.gui.control.ConnectionDlg;
 import org.apache.cassandra.gui.control.KeyspaceTreePanel;
+import org.apache.cassandra.gui.control.callback.RepaintCallback;
 import org.apache.cassandra.gui.control.callback.SelectedColumnFamilyCallback;
 
 public class CassandraGUI extends JFrame {
@@ -34,11 +38,11 @@ public class CassandraGUI extends JFrame {
             return false;
         }
 
-        final ColumnTreePane columnTreePane = new ColumnTreePane(dlg.getClient());
-        add(columnTreePane, BorderLayout.EAST);
+        Toolkit.getDefaultToolkit().setDynamicLayout(true);
 
+        final ColumnTreePane columnTreePane = new ColumnTreePane(dlg.getClient());
         final KeyspaceTreePanel keyspaceTreePanel = new KeyspaceTreePanel(dlg.getClient());
-        keyspaceTreePanel.setCallback(new SelectedColumnFamilyCallback() {
+        keyspaceTreePanel.setcCallback(new SelectedColumnFamilyCallback() {
             @Override
             public void callback(String keyspaceName,
                                  String columnFamilyName,
@@ -48,11 +52,38 @@ public class CassandraGUI extends JFrame {
                 columnTreePane.showRows(keyspaceName, columnFamilyName, startKey, endKey, rows);
             }
         });
-        add(keyspaceTreePanel, BorderLayout.WEST);
 
+        final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setLeftComponent(keyspaceTreePanel);
+        splitPane.setRightComponent(columnTreePane);
+        splitPane.setOneTouchExpandable(true);
+        splitPane.setDividerSize(6);
+
+        add(splitPane);
         setSize(850, 650);
         setLocationRelativeTo(null);
+
+        splitPane.getLeftComponent().setSize(280, 620);
+        keyspaceTreePanel.setrCallback(new RepaintCallback() {
+            @Override
+            public Dimension callback() {
+                return splitPane.getLeftComponent().getSize();
+            }
+        });
+
+        splitPane.getRightComponent().setSize(610, 620);
+        columnTreePane.setrCallback(new RepaintCallback() {
+            @Override
+            public Dimension callback() {
+                return splitPane.getRightComponent().getSize();
+            }
+        });
         keyspaceTreePanel.repaint();
+        keyspaceTreePanel.revalidate();
+        columnTreePane.repaint();
+        columnTreePane.revalidate();
+        repaint();
+
         setVisible(true);
 
         return true;

@@ -1,20 +1,20 @@
 package org.apache.cassandra;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.Map;
 
 public class Key implements Serializable {
     private static final long serialVersionUID = 2675876416744532430L;
 
     private String name;
     private boolean superColumn;
-    private List<SColumn> sColumns;
-    private List<Cell> cells;
+    private Map<String, SColumn> sColumns;
+    private Map<String, Cell> cells;
 
     public Key() {
     }
 
-    public Key(String name, List<SColumn> sColumns, List<Cell> cells) {
+    public Key(String name, Map<String, SColumn> sColumns, Map<String, Cell> cells) {
         this.name = name;
         this.sColumns = sColumns;
         this.cells = cells;
@@ -51,28 +51,28 @@ public class Key implements Serializable {
     /**
      * @return the sColumns
      */
-    public List<SColumn> getSColumns() {
+    public Map<String, SColumn> getSColumns() {
         return sColumns;
     }
 
     /**
      * @param sColumns the sColumns to set
      */
-    public void setSColumns(List<SColumn> sColumns) {
+    public void setSColumns(Map<String, SColumn> sColumns) {
         this.sColumns = sColumns;
     }
 
     /**
      * @return the cells
      */
-    public List<Cell> getCells() {
+    public Map<String, Cell> getCells() {
         return cells;
     }
 
     /**
      * @param cells the cells to set
      */
-    public void setCells(List<Cell> cells) {
+    public void setCells(Map<String, Cell> cells) {
         this.cells = cells;
     }
 }

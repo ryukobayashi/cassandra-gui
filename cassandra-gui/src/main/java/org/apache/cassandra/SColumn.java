@@ -1,18 +1,18 @@
 package org.apache.cassandra;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.Map;
 
 public class SColumn implements Serializable {
     private static final long serialVersionUID = -8041985483479505351L;
 
     private String name;
-    private List<Cell> cells;
+    private Map<String, Cell> cells;
 
     public SColumn() {
     }
 
-    public SColumn(String name, List<Cell> cells) {
+    public SColumn(String name, Map<String, Cell> cells) {
         this.name = name;
         this.cells = cells;
     }
@@ -34,14 +34,14 @@ public class SColumn implements Serializable {
     /**
      * @return the cells
      */
-    public List<Cell> getCells() {
+    public Map<String, Cell> getCells() {
         return cells;
     }
 
     /**
      * @param keys the keys to set
      */
-    public void setCells(List<Cell> cells) {
+    public void setCells(Map<String, Cell> cells) {
         this.cells = cells;
     }
 }

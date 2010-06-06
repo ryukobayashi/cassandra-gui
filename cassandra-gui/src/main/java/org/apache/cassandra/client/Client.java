@@ -1,11 +1,12 @@
 package org.apache.cassandra.client;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.cassandra.Cell;
 import org.apache.cassandra.Key;
@@ -89,18 +90,18 @@ public class Client {
         return client.describe_keyspaces();
     }
 
-    public List<String> getColumnFamilys(String keyspace) throws NotFoundException, TException {
-        List<String> l = new ArrayList<String>();
+    public Set<String> getColumnFamilys(String keyspace) throws NotFoundException, TException {
+        Set<String> s = new TreeSet<String>();
         for (Map.Entry<String, Map<String, String>> entry : client.describe_keyspace(keyspace).entrySet()) {
-            l.add(entry.getKey());
+            s.add(entry.getKey());
         }
 
-        return l;
+        return s;
     }
 
-    public List<Key> listKeyAndValues(String keyspace, String columnFamily, String startKey, String endKey, int rows)
+    public Map<String, Key> listKeyAndValues(String keyspace, String columnFamily, String startKey, String endKey, int rows)
             throws InvalidRequestException, UnavailableException, TimedOutException, TException, UnsupportedEncodingException {
-        List<Key> l = new ArrayList<Key>();
+        Map<String, Key> l = new TreeMap<String, Key>();
 
         ColumnParent columnParent = new ColumnParent(columnFamily);
 
@@ -118,31 +119,31 @@ public class Client {
         List<KeySlice> keySlices =
             client.get_range_slices(keyspace, columnParent, slicePredicate, keyRange, ConsistencyLevel.ONE);
         for (KeySlice keySlice : keySlices) {
-            Key key = new Key(keySlice.getKey(), new ArrayList<SColumn>(), new ArrayList<Cell>());
+            Key key = new Key(keySlice.getKey(), new TreeMap<String, SColumn>(), new TreeMap<String, Cell>());
 
             for (ColumnOrSuperColumn columns : keySlice.getColumns()) {
                 key.setSuperColumn(columns.isSetSuper_column());
                 if (columns.isSetSuper_column()) {
                     SuperColumn scol = columns.getSuper_column();
-                    SColumn s = new SColumn(new String(scol.getName(), "UTF8"), new ArrayList<Cell>());
+                    SColumn s = new SColumn(new String(scol.getName(), "UTF8"), new TreeMap<String, Cell>());
                     for (Column col : scol.getColumns()) {
                         Cell c = new Cell(new String(col.getName(), "UTF8"),
                                           new String(col.getValue(), "UTF8"),
                                           new Date(col.getTimestamp() / 1000));
-                        s.getCells().add(c);
+                        s.getCells().put(c.getName(), c);
                     }
 
-                    key.getSColumns().add(s);
+                    key.getSColumns().put(s.getName(), s);
                 } else {
                     Column col = columns.getColumn();
                     Cell c = new Cell(new String(col.getName(), "UTF8"),
                                       new String(col.getValue(), "UTF8"),
                                       new Date(col.getTimestamp() / 1000));
-                    key.getCells().add(c);
+                    key.getCells().put(c.getName(), c);
                 }
             }
 
-            l.add(key);
+            l.put(key.getName(), key);
         }
 
         return l;
