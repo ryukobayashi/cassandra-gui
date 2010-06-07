@@ -149,8 +149,8 @@ public class KeyspaceTreePanel extends JPanel {
     public void repaint() {
         if (scrollPane != null && rCallback != null) {
             Dimension d = rCallback.callback();
-            scrollPane.setPreferredSize(new Dimension((int) d.getWidth() - 10,
-                                                      (int) d.getHeight() - 10));
+            scrollPane.setPreferredSize(new Dimension(d.width - 10,
+                                                      d.height - 10));
             scrollPane.repaint();
         }
         super.repaint();

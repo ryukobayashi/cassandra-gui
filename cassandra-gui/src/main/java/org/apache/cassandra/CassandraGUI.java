@@ -60,10 +60,12 @@ public class CassandraGUI extends JFrame {
         splitPane.setDividerSize(6);
 
         add(splitPane);
-        setSize(850, 650);
+        setBounds(10, 10, 850, 650);
         setLocationRelativeTo(null);
 
-        splitPane.getLeftComponent().setSize(280, 620);
+        setVisible(true);
+
+        splitPane.getLeftComponent().setSize(keyspaceTreePanel.getPreferredSize());
         keyspaceTreePanel.setrCallback(new RepaintCallback() {
             @Override
             public Dimension callback() {
@@ -71,7 +73,8 @@ public class CassandraGUI extends JFrame {
             }
         });
 
-        splitPane.getRightComponent().setSize(610, 620);
+        splitPane.getRightComponent().setSize(new Dimension(850 - keyspaceTreePanel.getPreferredSize().width,
+                                                            keyspaceTreePanel.getPreferredSize().height));
         columnTreePane.setrCallback(new RepaintCallback() {
             @Override
             public Dimension callback() {
@@ -81,10 +84,6 @@ public class CassandraGUI extends JFrame {
         keyspaceTreePanel.repaint();
         keyspaceTreePanel.revalidate();
         columnTreePane.repaint();
-        columnTreePane.revalidate();
-        repaint();
-
-        setVisible(true);
 
         return true;
     }
