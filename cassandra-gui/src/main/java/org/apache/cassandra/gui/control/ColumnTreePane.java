@@ -1,16 +1,25 @@
 package org.apache.cassandra.gui.control;
 
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 
 import org.apache.cassandra.Cell;
 import org.apache.cassandra.Key;
@@ -21,12 +30,53 @@ import org.apache.cassandra.gui.control.callback.RepaintCallback;
 public class ColumnTreePane extends JPanel implements TreeSelectionListener {
     private static final long serialVersionUID = -4236268406209844637L;
 
+    private class PopupAction extends AbstractAction {
+        private static final long serialVersionUID = 4235052996425858520L;
+
+        private Cell c;
+
+        public PopupAction(String name, Cell c) {
+            this.c = c;
+            putValue(Action.NAME, name);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            CellPropertiesDlg cpdlg = new CellPropertiesDlg(c.getName(), c.getValue());
+            cpdlg.setVisible(true);
+        }
+    }
+
+    private class MousePopup extends MouseAdapter {
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            if (SwingUtilities.isRightMouseButton(e)) {
+                TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+                if (path == null) {
+                    return;
+                }
+
+                tree.setSelectionPath(path);
+                DefaultMutableTreeNode node =
+                    (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                Cell c = cellMap.get(node);
+                if (node != null && node.getChildCount() == 0 && c != null) {
+                    JPopupMenu popup = new JPopupMenu();
+                    popup.add(new PopupAction("Properties", c));
+                    popup.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        }
+    }
+
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
 
     private Client client;
     private RepaintCallback rCallback;
     private JScrollPane scrollPane;
     private JTree tree;
+
+    private Map<DefaultMutableTreeNode, Cell> cellMap = new HashMap<DefaultMutableTreeNode, Cell>();
 
     public ColumnTreePane(Client client) {
         this.client = client;
@@ -55,6 +105,7 @@ public class ColumnTreePane extends JPanel implements TreeSelectionListener {
             new DefaultMutableTreeNode(columnFamilyName);
         tree = new JTree(columnFamilyNode);
         tree.setRootVisible(true);
+        tree.addMouseListener(new MousePopup());
 
         try {
             Map<String, Key> l =
@@ -73,6 +124,7 @@ public class ColumnTreePane extends JPanel implements TreeSelectionListener {
                             DefaultMutableTreeNode cellNode =
                                 new DefaultMutableTreeNode(c.getName() + "=" + c.getValue() + ", " + DATE_FORMAT.format(c.getDate()));
                             scNode.add(cellNode);
+                            cellMap.put(cellNode, c);
                         }
                     }
                 } else {
@@ -81,6 +133,7 @@ public class ColumnTreePane extends JPanel implements TreeSelectionListener {
                         DefaultMutableTreeNode cellNode =
                             new DefaultMutableTreeNode(c.getName() + "=" + c.getValue() + ", " + DATE_FORMAT.format(c.getDate()));
                         keyNode.add(cellNode);
+                        cellMap.put(cellNode, c);
                     }
                 }
             }

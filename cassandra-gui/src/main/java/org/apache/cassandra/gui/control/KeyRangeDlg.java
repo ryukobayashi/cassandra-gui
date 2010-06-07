@@ -76,7 +76,6 @@ public class KeyRangeDlg extends JDialog {
         setTitle("key range");
         setLocationRelativeTo(null);
         setModal(true);
-        setVisible(true);
     }
 
     /**
