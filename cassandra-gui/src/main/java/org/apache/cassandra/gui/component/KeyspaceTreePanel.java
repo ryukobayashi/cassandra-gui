@@ -55,6 +55,7 @@ public class KeyspaceTreePanel extends JPanel {
 
             if (keyRange) {
                 KeyRangeDlg krd = new KeyRangeDlg();
+                krd.setVisible(true);
                 if (krd.isCancel()) {
                     return;
                 }
