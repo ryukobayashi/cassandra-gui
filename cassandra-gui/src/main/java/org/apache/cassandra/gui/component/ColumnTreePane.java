@@ -138,7 +138,7 @@ public class ColumnTreePane extends JPanel implements TreeSelectionListener {
                 }
             }
         } catch (Exception e) {
-            JOptionPane.showConfirmDialog(null, "error");
+            JOptionPane.showConfirmDialog(null, "error: " + e.getMessage());
             e.printStackTrace();
         }
 

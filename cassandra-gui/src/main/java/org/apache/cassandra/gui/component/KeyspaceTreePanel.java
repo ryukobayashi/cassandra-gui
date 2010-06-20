@@ -135,7 +135,7 @@ public class KeyspaceTreePanel extends JPanel {
                 }
             }
         } catch (TException e) {
-            JOptionPane.showConfirmDialog(null, "error");
+            JOptionPane.showConfirmDialog(null, "error: " + e.getMessage());
             e.printStackTrace();
             return;
         }
