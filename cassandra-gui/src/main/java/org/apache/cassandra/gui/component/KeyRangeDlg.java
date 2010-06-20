@@ -1,4 +1,4 @@
-package org.apache.cassandra.gui.control;
+package org.apache.cassandra.gui.component;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
