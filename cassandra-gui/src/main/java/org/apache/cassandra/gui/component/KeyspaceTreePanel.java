@@ -19,16 +19,19 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.apache.cassandra.client.Client;
+import org.apache.cassandra.gui.control.callback.PropertiesCallback;
 import org.apache.cassandra.gui.control.callback.RepaintCallback;
 import org.apache.cassandra.gui.control.callback.SelectedColumnFamilyCallback;
 import org.apache.cassandra.thrift.NotFoundException;
 import org.apache.thrift.TException;
 
-public class KeyspaceTreePanel extends JPanel {
+public class KeyspaceTreePanel extends JPanel implements TreeSelectionListener {
     private static final long serialVersionUID = 5481365703729222288L;
 
     private class PopupAction extends AbstractAction {
@@ -101,6 +104,11 @@ public class KeyspaceTreePanel extends JPanel {
         }
     }
 
+    private static final int TREE_CLUSTER = 1;
+    private static final int TREE_KEYSPACE = 2;
+    private static final int TREE_COLUMN_FAMILY = 3;
+
+    private PropertiesCallback propertiesCallback; 
     private SelectedColumnFamilyCallback cCallback;
     private RepaintCallback rCallback;
 
@@ -117,6 +125,7 @@ public class KeyspaceTreePanel extends JPanel {
             tree = new JTree(clusterNode);
             tree.setRootVisible(true);
             tree.addMouseListener(new MousePopup());
+            tree.addTreeSelectionListener(this);
 
             List<String> ks = new ArrayList<String>(client.getKeyspaces());
             Collections.sort(ks);
@@ -130,12 +139,12 @@ public class KeyspaceTreePanel extends JPanel {
                         keyspaceMap.put(columnFamily, keyspace);
                     }
                 } catch (NotFoundException e) {
-                    JOptionPane.showConfirmDialog(null, "error");
+                    JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
                     e.printStackTrace();
                 }
             }
         } catch (TException e) {
-            JOptionPane.showConfirmDialog(null, "error: " + e.getMessage());
+            JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
             e.printStackTrace();
             return;
         }
@@ -147,6 +156,19 @@ public class KeyspaceTreePanel extends JPanel {
     }
 
     @Override
+    public void valueChanged(TreeSelectionEvent e) {
+        switch (e.getPath().getPathCount()) {
+        case TREE_CLUSTER:
+            propertiesCallback.clusterCallback();
+            break;
+        case TREE_KEYSPACE:
+            break;
+        case TREE_COLUMN_FAMILY:
+            break;
+        }
+    }
+
+    @Override
     public void repaint() {
         if (scrollPane != null && rCallback != null) {
             Dimension d = rCallback.callback();
@@ -155,6 +177,13 @@ public class KeyspaceTreePanel extends JPanel {
             scrollPane.repaint();
         }
         super.repaint();
+    }
+
+    /**
+     * @param propertiesCallback the propertiesCallback to set
+     */
+    public void setPropertiesCallback(PropertiesCallback propertiesCallback) {
+        this.propertiesCallback = propertiesCallback;
     }
 
     /**

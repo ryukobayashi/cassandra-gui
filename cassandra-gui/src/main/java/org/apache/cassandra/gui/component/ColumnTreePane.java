@@ -16,8 +16,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
@@ -27,7 +25,7 @@ import org.apache.cassandra.SColumn;
 import org.apache.cassandra.client.Client;
 import org.apache.cassandra.gui.control.callback.RepaintCallback;
 
-public class ColumnTreePane extends JPanel implements TreeSelectionListener {
+public class ColumnTreePane extends JPanel {
     private static final long serialVersionUID = -4236268406209844637L;
 
     private class PopupAction extends AbstractAction {
@@ -86,15 +84,11 @@ public class ColumnTreePane extends JPanel implements TreeSelectionListener {
     }
 
     @Override
-    public void valueChanged(TreeSelectionEvent e) {
-    }
-
-    @Override
     public void repaint() {
         if (scrollPane != null && rCallback != null) {
             Dimension d = rCallback.callback();
-            scrollPane.setPreferredSize(new Dimension(d.width - 10,
-                                                      d.height - 10));
+            scrollPane.setPreferredSize(new Dimension(d.width - 5,
+                                                      d.height - 5));
             scrollPane.repaint();
         }
         super.repaint();

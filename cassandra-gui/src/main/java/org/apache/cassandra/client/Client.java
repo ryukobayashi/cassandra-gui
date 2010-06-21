@@ -24,6 +24,7 @@ import org.apache.cassandra.thrift.SlicePredicate;
 import org.apache.cassandra.thrift.SliceRange;
 import org.apache.cassandra.thrift.SuperColumn;
 import org.apache.cassandra.thrift.TimedOutException;
+import org.apache.cassandra.thrift.TokenRange;
 import org.apache.cassandra.thrift.UnavailableException;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -84,6 +85,10 @@ public class Client {
 
     public String getVersion() throws TException {
         return client.describe_version();
+    }
+
+    public List<TokenRange> getRing() throws TException {
+        return client.describe_ring(host);
     }
 
     public Set<String> getKeyspaces() throws TException {
