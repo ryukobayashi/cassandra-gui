@@ -79,15 +79,23 @@ public class Client {
         return connected;
     }
 
-    public String getClusterName() throws TException {
+    public String describeClusterName() throws TException {
         return client.describe_cluster_name();
     }
 
-    public String getVersion() throws TException {
+    public String descriveVersion() throws TException {
         return client.describe_version();
     }
 
-    public List<TokenRange> getRing() throws TException {
+    public String getTokenMap() throws TException {
+        return client.get_string_property("token map");
+    }
+
+    public String getConfigFile() throws TException {
+        return client.get_string_property("config file");
+    }
+
+    public List<TokenRange> describeRing() throws TException {
         return client.describe_ring(host);
     }
 

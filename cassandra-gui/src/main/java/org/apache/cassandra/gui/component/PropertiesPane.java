@@ -6,6 +6,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 
 import org.apache.cassandra.client.Client;
@@ -15,7 +16,7 @@ import org.apache.thrift.TException;
 public class PropertiesPane extends JPanel {
     private static final long serialVersionUID = 1452324774722196104L;
 
-    private static final String COLUMN_VERSION = "version";
+    private static final String COLUMN_VERSION = "api version";
 
     private final String[] columns = { "name", "value" }; 
 
@@ -24,12 +25,23 @@ public class PropertiesPane extends JPanel {
     private JScrollPane scrollPane;
     private JTable table;
 
-    private DefaultTableModel tableModel = new DefaultTableModel(columns, 0);
+    private DefaultTableModel tableModel;
     
     public PropertiesPane(Client client) {
         this.client = client;
 
+        tableModel = new DefaultTableModel(columns, 0) {
+            private static final long serialVersionUID = 7088445834198028640L;
+
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
         table = new JTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
         scrollPane = new JScrollPane(table);
         add(scrollPane);
         repaint();
@@ -49,7 +61,7 @@ public class PropertiesPane extends JPanel {
     public void showClusterProperties() {
         try {
             tableModel.setRowCount(0);
-            tableModel.addRow(new String[] {COLUMN_VERSION, client.getVersion()});
+            tableModel.addRow(new String[] {COLUMN_VERSION, client.descriveVersion()});
         } catch (TException e) {
             JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
             e.printStackTrace();

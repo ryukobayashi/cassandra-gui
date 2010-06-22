@@ -121,7 +121,7 @@ public class KeyspaceTreePanel extends JPanel implements TreeSelectionListener {
     public KeyspaceTreePanel(Client client) {
         try {
             DefaultMutableTreeNode clusterNode =
-                new DefaultMutableTreeNode(client.getClusterName());
+                new DefaultMutableTreeNode(client.describeClusterName());
             tree = new JTree(clusterNode);
             tree.setRootVisible(true);
             tree.addMouseListener(new MousePopup());
