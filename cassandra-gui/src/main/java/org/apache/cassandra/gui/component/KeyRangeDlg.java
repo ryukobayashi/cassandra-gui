@@ -35,13 +35,13 @@ public class KeyRangeDlg extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (startKeyText.getText().isEmpty()) {
-                    JOptionPane.showConfirmDialog(null, "Enter start key.");
+                    JOptionPane.showMessageDialog(null, "Enter start key.");
                     startKeyText.requestFocus();
                     return;
                 }
 
                 if (endKeyText.getText().isEmpty()) {
-                    JOptionPane.showConfirmDialog(null, "Enter end key.");
+                    JOptionPane.showMessageDialog(null, "Enter end key.");
                     endKeyText.requestFocus();
                     return;
                 }

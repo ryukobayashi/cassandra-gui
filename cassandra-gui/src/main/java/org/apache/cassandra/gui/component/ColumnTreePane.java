@@ -132,7 +132,7 @@ public class ColumnTreePane extends JPanel {
                 }
             }
         } catch (Exception e) {
-            JOptionPane.showConfirmDialog(null, "error: " + e.getMessage());
+            JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
             e.printStackTrace();
         }
 
