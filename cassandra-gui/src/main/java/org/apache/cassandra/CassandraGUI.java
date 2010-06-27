@@ -60,6 +60,16 @@ public class CassandraGUI extends JFrame {
             public void clusterCallback() {
                 propertiesPane.showClusterProperties();
             }
+
+            @Override
+            public void keyspaceCallback(String keyspace) {
+                propertiesPane.showKeyspaceProperties(keyspace);
+            }
+
+            @Override
+            public void columnFamilyCallback(String keyspace, String columnFamily) {
+                propertiesPane.showColumnFamilyProperties(keyspace, columnFamily);
+            }
         });
 
         final JSplitPane rightSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);

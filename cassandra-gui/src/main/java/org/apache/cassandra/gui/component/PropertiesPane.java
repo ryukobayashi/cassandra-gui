@@ -1,6 +1,7 @@
 package org.apache.cassandra.gui.component;
 
 import java.awt.Dimension;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -11,12 +12,13 @@ import javax.swing.table.DefaultTableModel;
 
 import org.apache.cassandra.client.Client;
 import org.apache.cassandra.gui.control.callback.RepaintCallback;
-import org.apache.thrift.TException;
 
 public class PropertiesPane extends JPanel {
     private static final long serialVersionUID = 1452324774722196104L;
 
     private static final String COLUMN_VERSION = "api version";
+    private static final String COLUMN_NUMBER_OF_KEYSPACE = "Number of Keyspace";
+    private static final String COLUMN_NUMBER_OF_CALUMN_FAMILY = "Number of CalumnFamily";
 
     private final String[] columns = { "name", "value" }; 
 
@@ -62,13 +64,45 @@ public class PropertiesPane extends JPanel {
         try {
             tableModel.setRowCount(0);
             tableModel.addRow(new String[] {COLUMN_VERSION, client.descriveVersion()});
-        } catch (TException e) {
+            int n = client.getKeyspaces().size();
+            tableModel.addRow(new String[] {COLUMN_NUMBER_OF_KEYSPACE, String.valueOf(n)});
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
             e.printStackTrace();
             return;
         }
 
         repaint();
+    }
+
+    public void showKeyspaceProperties(String keyspace) {
+        try {
+            tableModel.setRowCount(0);
+            int n = client.getColumnFamilys(keyspace).size();
+            tableModel.addRow(new String[] {COLUMN_NUMBER_OF_CALUMN_FAMILY, String.valueOf(n)});
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+
+        repaint();
+    }
+
+    public void showColumnFamilyProperties(String keyspace, String columnFamily) {
+        try {
+            tableModel.setRowCount(0);
+            Map<String, String> m = client.getColumnFamily(keyspace, columnFamily);
+            for (Map.Entry<String, String> e : m.entrySet()) {
+                tableModel.addRow(new String[] {e.getKey(), e.getValue()});
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+
+        repaint();        
     }
 
     /**

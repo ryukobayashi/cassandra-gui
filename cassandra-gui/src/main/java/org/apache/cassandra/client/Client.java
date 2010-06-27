@@ -103,6 +103,11 @@ public class Client {
         return client.describe_keyspaces();
     }
 
+    public Map<String, String> getColumnFamily(String keyspace, String columnFamily)
+                throws NotFoundException, TException {
+        return client.describe_keyspace(keyspace).get(columnFamily);
+    }
+
     public Set<String> getColumnFamilys(String keyspace) throws NotFoundException, TException {
         Set<String> s = new TreeSet<String>();
         for (Map.Entry<String, Map<String, String>> entry : client.describe_keyspace(keyspace).entrySet()) {

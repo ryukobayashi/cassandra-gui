@@ -157,13 +157,21 @@ public class KeyspaceTreePanel extends JPanel implements TreeSelectionListener {
 
     @Override
     public void valueChanged(TreeSelectionEvent e) {
+        String keyspace;
+        String columnFamily;
+
         switch (e.getPath().getPathCount()) {
         case TREE_CLUSTER:
             propertiesCallback.clusterCallback();
             break;
         case TREE_KEYSPACE:
+            keyspace = e.getPath().getPath()[TREE_KEYSPACE - 1].toString();
+            propertiesCallback.keyspaceCallback(keyspace);
             break;
         case TREE_COLUMN_FAMILY:
+            keyspace = e.getPath().getPath()[TREE_KEYSPACE - 1].toString();
+            columnFamily = e.getPath().getPath()[TREE_COLUMN_FAMILY - 1].toString();
+            propertiesCallback.columnFamilyCallback(keyspace, columnFamily);
             break;
         }
     }
