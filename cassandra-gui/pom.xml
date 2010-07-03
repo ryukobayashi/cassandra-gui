@@ -116,8 +116,8 @@
       <groupId>org.apache.cassandra</groupId>
       <artifactId>cassandra</artifactId>
       <scope>system</scope>
-      <systemPath>${basedir}/lib/apache-cassandra-0.6.2.jar</systemPath>
-      <version>0.6.2</version>
+      <systemPath>${basedir}/lib/apache-cassandra-0.6.3.jar</systemPath>
+      <version>0.6.3</version>
     </dependency>
   </dependencies>
 </project>

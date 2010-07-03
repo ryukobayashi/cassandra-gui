@@ -95,7 +95,7 @@ public class Client {
         return client.get_string_property("config file");
     }
 
-    public List<TokenRange> describeRing() throws TException {
+    public List<TokenRange> describeRing() throws TException, InvalidRequestException {
         return client.describe_ring(host);
     }
 
