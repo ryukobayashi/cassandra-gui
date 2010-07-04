@@ -1,6 +1,9 @@
 package org.apache.cassandra.client;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +13,9 @@ import java.util.TreeSet;
 
 import org.apache.cassandra.Cell;
 import org.apache.cassandra.Key;
+import org.apache.cassandra.RingNode;
 import org.apache.cassandra.SColumn;
+import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.thrift.Cassandra;
 import org.apache.cassandra.thrift.Column;
 import org.apache.cassandra.thrift.ColumnOrSuperColumn;
@@ -26,6 +31,7 @@ import org.apache.cassandra.thrift.SuperColumn;
 import org.apache.cassandra.thrift.TimedOutException;
 import org.apache.cassandra.thrift.TokenRange;
 import org.apache.cassandra.thrift.UnavailableException;
+import org.apache.cassandra.tools.NodeProbe;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -36,33 +42,38 @@ import org.apache.thrift.transport.TTransportException;
 public class Client {
     public static final String DEFAULT_THRIFT_HOST = "localhost";
     public static final int DEFAULT_THRIFT_PORT = 9160;
+    public static final int DEFAULT_JMX_PORT = 8080;
 
-    private TTransport transport = null;
-    private TProtocol protocol = null;
-    private Cassandra.Client client = null;
+    private TTransport transport;
+    private TProtocol protocol;
+    private Cassandra.Client client;
+    private NodeProbe probe;
 
     private boolean connected = false;
     private String host;
-    private int port;
+    private int thriftPort;
+    private int jmxPort;
 
     public Client() {
-        this(DEFAULT_THRIFT_HOST, DEFAULT_THRIFT_PORT);
+        this(DEFAULT_THRIFT_HOST, DEFAULT_THRIFT_PORT, DEFAULT_JMX_PORT);
     }
     
     public Client(String host) {
-        this(host, DEFAULT_THRIFT_PORT);
+        this(host, DEFAULT_THRIFT_PORT, DEFAULT_JMX_PORT);
     }
 
-    public Client(String host, int port) {
+    public Client(String host, int thriftPort, int jmxPort) {
         this.host = host;
-        this.port = port;
+        this.thriftPort = thriftPort;
+        this.jmxPort = jmxPort;
     }
 
-    public void connect() throws TTransportException {
+    public void connect() throws TTransportException, IOException, InterruptedException {
         if (!connected) {
-            transport = new TSocket(host, port);
+            transport = new TSocket(host, thriftPort);
             protocol = new TBinaryProtocol(transport);
             client = new Cassandra.Client(protocol);
+            probe = new NodeProbe(host, jmxPort);
             transport.open();
             connected = true;
         }
@@ -95,8 +106,24 @@ public class Client {
         return client.get_string_property("config file");
     }
 
-    public List<TokenRange> describeRing() throws TException, InvalidRequestException {
-        return client.describe_ring(host);
+    public List<TokenRange> describeRing(String keyspace) throws TException, InvalidRequestException {
+        return client.describe_ring(keyspace);
+    }
+
+    public RingNode listRing() {
+        RingNode r = new RingNode();
+
+        r.setRangeMap(probe.getRangeToEndPointMap(null));
+
+        List<Range> ranges = new ArrayList<Range>(r.getRangeMap().keySet());
+        Collections.sort(ranges);
+        r.setRanges(ranges);
+
+        r.setLiveNodes(probe.getLiveNodes());
+        r.setDeadNodes(probe.getUnreachableNodes());
+        r.setLoadMap(probe.getLoadMap());
+
+        return r;
     }
 
     public Set<String> getKeyspaces() throws TException {

@@ -15,7 +15,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.apache.cassandra.client.Client;
-import org.apache.thrift.transport.TTransportException;
 
 public class ConnectionDlg extends JDialog {
     private static final long serialVersionUID = 8707158056959280058L;
@@ -30,19 +29,23 @@ public class ConnectionDlg extends JDialog {
     private Client client;
     private JButton ok = new JButton("OK");
     private JTextField hostText = new JTextField();
-    private JTextField portText = new JTextField();
+    private JTextField thriftPortText = new JTextField();
+    private JTextField jmxPortTextField = new JTextField();
 
     public ConnectionDlg(JFrame owner){
         super(owner);
 
         hostText.addActionListener(new EnterAction());
-        portText.addActionListener(new EnterAction());
+        thriftPortText.addActionListener(new EnterAction());
+        jmxPortTextField.addActionListener(new EnterAction());
 
-        JPanel inputPanel = new JPanel(new GridLayout(2, 2));
+        JPanel inputPanel = new JPanel(new GridLayout(3, 2));
         inputPanel.add(new JLabel("host:"));
         inputPanel.add(hostText);
-        inputPanel.add(new JLabel("port:"));
-        inputPanel.add(portText);
+        inputPanel.add(new JLabel("thrift port:"));
+        inputPanel.add(thriftPortText);
+        inputPanel.add(new JLabel("jmx port:"));
+        inputPanel.add(jmxPortTextField);
 
         ok.addActionListener(new ActionListener() {
             @Override
@@ -84,15 +87,19 @@ public class ConnectionDlg extends JDialog {
         }
 
         String host = hostText.getText();
-        int port =
-            portText.getText().isEmpty() ?
+        int thriftPort =
+            thriftPortText.getText().isEmpty() ?
                     Client.DEFAULT_THRIFT_PORT :
-                    Integer.valueOf(portText.getText());
+                    Integer.valueOf(thriftPortText.getText());
+        int jmxPort =
+            jmxPortTextField.getText().isEmpty() ?
+                    Client.DEFAULT_JMX_PORT :
+                    Integer.valueOf(jmxPortTextField.getText());
 
-        client = new Client(host, port);
+        client = new Client(host, thriftPort, jmxPort);
         try {
             client.connect();
-        } catch (TTransportException e1) {
+        } catch (Exception e1) {
             JOptionPane.showMessageDialog(null, "connection faild.");
             e1.printStackTrace();
             return;

@@ -1,5 +1,6 @@
 package org.apache.cassandra.gui.component;
 
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
@@ -102,8 +103,10 @@ public class ColumnTreePane extends JPanel {
         tree.addMouseListener(new MousePopup());
 
         try {
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             Map<String, Key> l =
                 client.listKeyAndValues(keyspaceName, columnFamilyName, startKey, endKey, rows);
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             for (String keyName : l.keySet()) {
                 Key k = l.get(keyName);
                 DefaultMutableTreeNode keyNode = new DefaultMutableTreeNode(k.getName());
@@ -132,6 +135,7 @@ public class ColumnTreePane extends JPanel {
                 }
             }
         } catch (Exception e) {
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
             e.printStackTrace();
         }
