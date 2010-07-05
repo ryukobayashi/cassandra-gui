@@ -106,6 +106,12 @@
     </dependency>
 
     <dependency>
+      <groupId>jung</groupId>
+      <artifactId>jung</artifactId>
+      <version>1.7.6</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.thrift</groupId>
       <artifactId>libthrift</artifactId>
       <scope>system</scope>

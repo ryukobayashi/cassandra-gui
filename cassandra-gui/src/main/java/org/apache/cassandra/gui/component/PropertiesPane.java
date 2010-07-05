@@ -58,11 +58,12 @@ public class PropertiesPane extends JPanel {
                     int row = table.convertRowIndexToModel(table.rowAtPoint(point));
                     try {
                         if (tableModel.getValueAt(row, 0).equals(COLUMN_CONFIG_FILE)) {
-                                String str = client.getConfigFile();
-                                ShowConfigDlg dlg = new ShowConfigDlg(str);
-                                dlg.setVisible(true);
+                            String str = client.getConfigFile();
+                            ShowConfigDlg dlg = new ShowConfigDlg(str);
+                            dlg.setVisible(true);
                         } else if (tableModel.getValueAt(row, 0).equals(COLUMN_RING)) {
-                            client.listRing();
+                            RingDlg rd = new RingDlg(client);
+                            rd.setVisible(true);
                         }
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(null, "error: " + e.getMessage());

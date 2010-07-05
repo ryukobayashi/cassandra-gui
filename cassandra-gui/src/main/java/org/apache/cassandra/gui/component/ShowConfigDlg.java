@@ -2,7 +2,6 @@ package org.apache.cassandra.gui.component;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -18,9 +17,6 @@ public class ShowConfigDlg extends JDialog {
     public ShowConfigDlg(String value){
         final JTextArea text = new JTextArea();
         text.setText(value);
-
-        JPanel showPanel = new JPanel(new GridLayout(1, 1));
-        showPanel.add(text);
 
         JButton ok = new JButton("OK");
         ok.addActionListener(new ActionListener() {
