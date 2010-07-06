@@ -2,6 +2,7 @@ package org.apache.cassandra.gui.component;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.awt.Paint;
 import java.awt.event.ActionEvent;
@@ -88,7 +89,9 @@ public class RingDlg extends JDialog {
     }
 
     private VisualizationViewer setupControls() {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         final RingNode ringNode = client.listRing();
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 
         final Map<Range, List<String>> rangeMap = ringNode.getRangeMap();
         final List<Range> ranges = ringNode.getRanges();
@@ -206,7 +209,10 @@ public class RingDlg extends JDialog {
                                 @Override
                                 public void actionPerformed(ActionEvent ae) {
                                     try {
+                                        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                                         NodeInfo ni = client.getNodeInfo(endpointMap.get(vertex));
+                                        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+
                                         NodeInfoDlg nid = new NodeInfoDlg(ni);
                                         nid.setVisible(true);
                                     } catch (Exception e) {
@@ -223,7 +229,11 @@ public class RingDlg extends JDialog {
                                 public void actionPerformed(ActionEvent ae) {
                                     try {
                                         String endpoint = endpointMap.get(vertex);
+
+                                        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                                         List<Tpstats> l = client.getTpstats(endpoint);
+                                        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+
                                         TpstatsDlg td = new TpstatsDlg(endpoint, l);
                                         td.setVisible(true);
                                     } catch (Exception e) {
