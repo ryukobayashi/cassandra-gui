@@ -6,17 +6,22 @@ import java.awt.FlowLayout;
 import java.awt.Paint;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 
+import org.apache.cassandra.NodeInfo;
 import org.apache.cassandra.RingNode;
 import org.apache.cassandra.client.Client;
 import org.apache.cassandra.dht.Range;
@@ -30,9 +35,18 @@ import edu.uci.ics.jung.graph.impl.UndirectedSparseEdge;
 import edu.uci.ics.jung.graph.impl.UndirectedSparseGraph;
 import edu.uci.ics.jung.graph.impl.UndirectedSparseVertex;
 import edu.uci.ics.jung.visualization.Layout;
+import edu.uci.ics.jung.visualization.PickSupport;
 import edu.uci.ics.jung.visualization.PluggableRenderer;
+import edu.uci.ics.jung.visualization.ShapePickSupport;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.contrib.CircleLayout;
+import edu.uci.ics.jung.visualization.control.AbstractPopupGraphMousePlugin;
+import edu.uci.ics.jung.visualization.control.LayoutScalingControl;
+import edu.uci.ics.jung.visualization.control.PickingGraphMousePlugin;
+import edu.uci.ics.jung.visualization.control.PluggableGraphMouse;
+import edu.uci.ics.jung.visualization.control.RotatingGraphMousePlugin;
+import edu.uci.ics.jung.visualization.control.ScalingGraphMousePlugin;
+import edu.uci.ics.jung.visualization.control.TranslatingGraphMousePlugin;
 
 public class RingDlg extends JDialog {
     private static final long serialVersionUID = 1543749033698969116L;
@@ -47,7 +61,7 @@ public class RingDlg extends JDialog {
         this.client = client;
 
         JScrollPane scrollPane = new JScrollPane(setupControls());
-        
+
         JButton ok = new JButton("OK");
         ok.addActionListener(new ActionListener() {
             @Override
@@ -58,13 +72,13 @@ public class RingDlg extends JDialog {
 
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.add(ok);
-    
+
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.SOUTH);
-    
+
         add(panel);
-    
+
         pack();
         setModalityType(ModalityType.DOCUMENT_MODAL);
         setTitle("Ring");
@@ -82,6 +96,7 @@ public class RingDlg extends JDialog {
         final Map<String, String> loadMap = ringNode.getLoadMap();
 
         final Map<Vertex, Integer> statusMap = new HashMap<Vertex, Integer>();
+        final Map<Vertex, String> endpointMap = new HashMap<Vertex, String>();
 
         final UndirectedSparseGraph graph = new UndirectedSparseGraph();
         final StringLabeller stringLabeller = StringLabeller.getLabeller(graph);
@@ -108,10 +123,10 @@ public class RingDlg extends JDialog {
                 e.printStackTrace();
             }
 
-            statusMap.put(v,
-                            liveNodes.contains(primaryEndpoint) ? NODE_STATUS_UP
+            statusMap.put(v, liveNodes.contains(primaryEndpoint) ? NODE_STATUS_UP
                                     : deadNodes.contains(primaryEndpoint) ? NODE_STATUS_DOWN
                                     : NODE_STATUS_UNKNOWN);
+            endpointMap.put(v, primaryEndpoint);
 
             count++;
         }
@@ -121,6 +136,7 @@ public class RingDlg extends JDialog {
             if (i+1 != vertices.length) {
                 index = i + 1;
             }
+
             graph.addEdge(new UndirectedSparseEdge(vertices[i], vertices[index]));
         }
 
@@ -149,7 +165,7 @@ public class RingDlg extends JDialog {
 
                 return c;
             }
-            
+
             @Override
             public Paint getDrawPaint(Vertex v) {
                 Color c = Color.YELLOW;
@@ -166,7 +182,52 @@ public class RingDlg extends JDialog {
             }
         });
 
+        PluggableGraphMouse gm = new PluggableGraphMouse();
+        gm.add(new PickingGraphMousePlugin());
+        gm.add(new RotatingGraphMousePlugin());
+        gm.add(new TranslatingGraphMousePlugin());
+        gm.add(new ScalingGraphMousePlugin(new LayoutScalingControl(), 0));
+        gm.add(new AbstractPopupGraphMousePlugin() {
+            @Override
+            protected void handlePopup(MouseEvent e) {
+                final VisualizationViewer vv = (VisualizationViewer) e.getSource();
+                final Point2D ivp = vv.inverseViewTransform(e.getPoint());
+                PickSupport pickSupport = vv.getPickSupport();
+                final Vertex vertex = pickSupport.getVertex(ivp.getX(), ivp.getY());
+
+                if(pickSupport != null) {
+                    JPopupMenu popup = new JPopupMenu();
+                    if(vertex != null) {
+                        if (statusMap.get(vertex) == NODE_STATUS_UP) {
+                            popup.add(new AbstractAction("info") {
+                                private static final long serialVersionUID = -6992429747383272830L;
+
+                                @Override
+                                public void actionPerformed(ActionEvent ae) {
+                                    try {
+                                        System.out.println(vertex);
+                                        NodeInfo ni = client.getNodeInfo(endpointMap.get(vertex));
+                                        NodeInfoDlg nid = new NodeInfoDlg(ni);
+                                        nid.setVisible(true);
+                                    } catch (Exception e) {
+                                        JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                    if(popup.getComponentCount() > 0) {
+                        popup.show(vv, e.getX(), e.getY());
+                    }
+                }
+            }
+        });
+
         final VisualizationViewer viewer = new VisualizationViewer(layout, renderer);
+        viewer.setGraphMouse(gm);
+        viewer.setPickSupport(new ShapePickSupport(viewer, viewer, renderer, 2));
 
         return viewer;
     }

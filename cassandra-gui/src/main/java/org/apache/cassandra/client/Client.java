@@ -2,6 +2,7 @@ package org.apache.cassandra.client;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.management.MemoryUsage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -13,6 +14,7 @@ import java.util.TreeSet;
 
 import org.apache.cassandra.Cell;
 import org.apache.cassandra.Key;
+import org.apache.cassandra.NodeInfo;
 import org.apache.cassandra.RingNode;
 import org.apache.cassandra.SColumn;
 import org.apache.cassandra.dht.Range;
@@ -57,7 +59,7 @@ public class Client {
     public Client() {
         this(DEFAULT_THRIFT_HOST, DEFAULT_THRIFT_PORT, DEFAULT_JMX_PORT);
     }
-    
+
     public Client(String host) {
         this(host, DEFAULT_THRIFT_PORT, DEFAULT_JMX_PORT);
     }
@@ -124,6 +126,22 @@ public class Client {
         r.setLoadMap(probe.getLoadMap());
 
         return r;
+    }
+
+    public NodeInfo getNodeInfo(String endpoint) throws IOException, InterruptedException {
+        NodeProbe p = new NodeProbe(endpoint, jmxPort);
+
+        NodeInfo ni = new NodeInfo();
+        ni.setEndpoint(endpoint);
+        ni.setLoad(p.getLoadString());
+        ni.setGenerationNumber(p.getCurrentGenerationNumber());
+        ni.setUptime(p.getUptime() / 1000);
+
+        MemoryUsage heapUsage = p.getHeapMemoryUsage();
+        ni.setMemUsed((double) heapUsage.getUsed() / (1024 * 1024));
+        ni.setMemMax((double) heapUsage.getMax() / (1024 * 1024));
+
+        return ni;
     }
 
     public Set<String> getKeyspaces() throws TException {
