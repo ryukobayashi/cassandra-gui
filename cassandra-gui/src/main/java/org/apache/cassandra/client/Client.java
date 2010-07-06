@@ -6,6 +6,7 @@ import java.lang.management.MemoryUsage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,6 +18,8 @@ import org.apache.cassandra.Key;
 import org.apache.cassandra.NodeInfo;
 import org.apache.cassandra.RingNode;
 import org.apache.cassandra.SColumn;
+import org.apache.cassandra.Tpstats;
+import org.apache.cassandra.concurrent.IExecutorMBean;
 import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.thrift.Cassandra;
 import org.apache.cassandra.thrift.Column;
@@ -142,6 +145,27 @@ public class Client {
         ni.setMemMax((double) heapUsage.getMax() / (1024 * 1024));
 
         return ni;
+    }
+
+    public List<Tpstats> getTpstats(String endpoint) throws IOException, InterruptedException {
+        List<Tpstats> l = new ArrayList<Tpstats>();
+
+        NodeProbe p = new NodeProbe(endpoint, jmxPort);
+        Iterator<Map.Entry<String, IExecutorMBean>> threads = p.getThreadPoolMBeanProxies();
+        for (;threads.hasNext();) {
+            Map.Entry<String, IExecutorMBean> thread = threads.next();
+
+            Tpstats tp = new Tpstats();
+            tp.setPoolName(thread.getKey());
+
+            IExecutorMBean threadPoolProxy = thread.getValue();
+            tp.setActiveCount(threadPoolProxy.getActiveCount());
+            tp.setPendingTasks(threadPoolProxy.getPendingTasks());
+            tp.setCompletedTasks(threadPoolProxy.getCompletedTasks());
+            l.add(tp);
+        }
+
+        return l;
     }
 
     public Set<String> getKeyspaces() throws TException {

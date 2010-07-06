@@ -23,6 +23,7 @@ import javax.swing.JScrollPane;
 
 import org.apache.cassandra.NodeInfo;
 import org.apache.cassandra.RingNode;
+import org.apache.cassandra.Tpstats;
 import org.apache.cassandra.client.Client;
 import org.apache.cassandra.dht.Range;
 
@@ -205,10 +206,26 @@ public class RingDlg extends JDialog {
                                 @Override
                                 public void actionPerformed(ActionEvent ae) {
                                     try {
-                                        System.out.println(vertex);
                                         NodeInfo ni = client.getNodeInfo(endpointMap.get(vertex));
                                         NodeInfoDlg nid = new NodeInfoDlg(ni);
                                         nid.setVisible(true);
+                                    } catch (Exception e) {
+                                        JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+
+                            popup.add(new AbstractAction("tpstats") {
+                                private static final long serialVersionUID = 6511117264115071716L;
+
+                                @Override
+                                public void actionPerformed(ActionEvent ae) {
+                                    try {
+                                        String endpoint = endpointMap.get(vertex);
+                                        List<Tpstats> l = client.getTpstats(endpoint);
+                                        TpstatsDlg td = new TpstatsDlg(endpoint, l);
+                                        td.setVisible(true);
                                     } catch (Exception e) {
                                         JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
                                         e.printStackTrace();
