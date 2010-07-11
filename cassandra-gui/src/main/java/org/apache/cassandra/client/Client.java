@@ -218,6 +218,15 @@ public class Client {
         client.remove(keyspace, key, colPath, timestamp, ConsistencyLevel.ONE);
     }
 
+    public void removeColumnOnSuperColumn(String keyspace, String columnFamily, String key, String superColumn, String column)
+            throws InvalidRequestException, UnavailableException, TimedOutException, TException {
+        ColumnPath colPath = new ColumnPath(columnFamily);
+        colPath.setSuper_column(superColumn.getBytes());
+        colPath.setColumn(column.getBytes());
+        long timestamp = System.currentTimeMillis() * 1000;
+        client.remove(keyspace, key, colPath, timestamp, ConsistencyLevel.ONE);
+    }
+
     public Map<String, Key> listKeyAndValues(String keyspace, String columnFamily, String startKey, String endKey, int rows)
             throws InvalidRequestException, UnavailableException, TimedOutException, TException, UnsupportedEncodingException {
         Map<String, Key> l = new TreeMap<String, Key>();
