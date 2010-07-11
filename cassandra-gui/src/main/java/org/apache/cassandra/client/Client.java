@@ -25,6 +25,7 @@ import org.apache.cassandra.thrift.Cassandra;
 import org.apache.cassandra.thrift.Column;
 import org.apache.cassandra.thrift.ColumnOrSuperColumn;
 import org.apache.cassandra.thrift.ColumnParent;
+import org.apache.cassandra.thrift.ColumnPath;
 import org.apache.cassandra.thrift.ConsistencyLevel;
 import org.apache.cassandra.thrift.InvalidRequestException;
 import org.apache.cassandra.thrift.KeyRange;
@@ -73,7 +74,8 @@ public class Client {
         this.jmxPort = jmxPort;
     }
 
-    public void connect() throws TTransportException, IOException, InterruptedException {
+    public void connect()
+            throws TTransportException, IOException, InterruptedException {
         if (!connected) {
             transport = new TSocket(host, thriftPort);
             protocol = new TBinaryProtocol(transport);
@@ -111,7 +113,8 @@ public class Client {
         return client.get_string_property("config file");
     }
 
-    public List<TokenRange> describeRing(String keyspace) throws TException, InvalidRequestException {
+    public List<TokenRange> describeRing(String keyspace)
+            throws TException, InvalidRequestException {
         return client.describe_ring(keyspace);
     }
 
@@ -177,13 +180,42 @@ public class Client {
         return client.describe_keyspace(keyspace).get(columnFamily);
     }
 
-    public Set<String> getColumnFamilys(String keyspace) throws NotFoundException, TException {
+    public Set<String> getColumnFamilys(String keyspace)
+            throws NotFoundException, TException {
         Set<String> s = new TreeSet<String>();
         for (Map.Entry<String, Map<String, String>> entry : client.describe_keyspace(keyspace).entrySet()) {
             s.add(entry.getKey());
         }
 
         return s;
+    }
+
+    public int countColumnsRecord(String keyspace, String columnFamily, String key)
+            throws InvalidRequestException, UnavailableException, TimedOutException, TException {
+        ColumnParent colParent = new ColumnParent(columnFamily);
+        return client.get_count(keyspace, key, colParent, ConsistencyLevel.ONE);
+    }
+
+    public int countSuperColumnsRecord(String keyspace, String columnFamily, String superColumn, String key)
+            throws InvalidRequestException, UnavailableException, TimedOutException, TException {
+        ColumnParent colParent = new ColumnParent(columnFamily);
+        colParent.setSuper_column(superColumn.getBytes());
+        return client.get_count(keyspace, key, colParent, ConsistencyLevel.ONE);
+    }
+
+    public void removeKey(String keyspace, String columnFamily, String key)
+            throws InvalidRequestException, UnavailableException, TimedOutException, TException {
+        ColumnPath colPath = new ColumnPath(columnFamily);
+        long timestamp = System.currentTimeMillis() * 1000;
+        client.remove(keyspace, key, colPath, timestamp, ConsistencyLevel.ONE);
+    }
+
+    public void removeColumn(String keyspace, String columnFamily, String key, String column)
+            throws InvalidRequestException, UnavailableException, TimedOutException, TException {
+        ColumnPath colPath = new ColumnPath(columnFamily);
+        colPath.setColumn(column.getBytes());
+        long timestamp = System.currentTimeMillis() * 1000;
+        client.remove(keyspace, key, colPath, timestamp, ConsistencyLevel.ONE);
     }
 
     public Map<String, Key> listKeyAndValues(String keyspace, String columnFamily, String startKey, String endKey, int rows)
@@ -214,7 +246,8 @@ public class Client {
                     SuperColumn scol = columns.getSuper_column();
                     SColumn s = new SColumn(new String(scol.getName(), "UTF8"), new TreeMap<String, Cell>());
                     for (Column col : scol.getColumns()) {
-                        Cell c = new Cell(new String(col.getName(), "UTF8"),
+                        Cell c = new Cell(key,
+                                          new String(col.getName(), "UTF8"),
                                           new String(col.getValue(), "UTF8"),
                                           new Date(col.getTimestamp() / 1000));
                         s.getCells().put(c.getName(), c);
@@ -223,7 +256,8 @@ public class Client {
                     key.getSColumns().put(s.getName(), s);
                 } else {
                     Column col = columns.getColumn();
-                    Cell c = new Cell(new String(col.getName(), "UTF8"),
+                    Cell c = new Cell(key,
+                                      new String(col.getName(), "UTF8"),
                                       new String(col.getValue(), "UTF8"),
                                       new Date(col.getTimestamp() / 1000));
                     key.getCells().put(c.getName(), c);

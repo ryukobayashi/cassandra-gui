@@ -6,6 +6,7 @@ import java.util.Date;
 public class Cell implements Serializable {
     private static final long serialVersionUID = 4517336493185234248L;
 
+    private Key key;
     private String name;
     private String value;
     private Date date;
@@ -13,10 +14,25 @@ public class Cell implements Serializable {
     public Cell() {
     }
 
-    public Cell(String name, String value, Date date) {
+    public Cell(Key key, String name, String value, Date date) {
+        this.key = key;
         this.name = name;
         this.value = value;
         this.date = date;
+    }
+
+    /**
+     * @return the key
+     */
+    public Key getKey() {
+        return key;
+    }
+
+    /**
+     * @param key the key to set
+     */
+    public void setKey(Key key) {
+        this.key = key;
     }
 
     /**

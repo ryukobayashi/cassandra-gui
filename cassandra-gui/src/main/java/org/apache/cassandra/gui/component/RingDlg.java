@@ -135,13 +135,15 @@ public class RingDlg extends JDialog {
             count++;
         }
 
-        for (int i = 0; i < vertices.length; i++) {
-            int index = 0;
-            if (i+1 != vertices.length) {
-                index = i + 1;
+        if (vertices.length > 1) {
+            for (int i = 0; i < vertices.length; i++) {
+                int index = 0;
+                if (i+1 != vertices.length) {
+                    index = i + 1;
+                }
+    
+                graph.addEdge(new UndirectedSparseEdge(vertices[i], vertices[index]));
             }
-
-            graph.addEdge(new UndirectedSparseEdge(vertices[i], vertices[index]));
         }
 
         final Layout layout = new CircleLayout(graph);
