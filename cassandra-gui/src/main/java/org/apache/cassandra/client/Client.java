@@ -210,6 +210,14 @@ public class Client {
         client.remove(keyspace, key, colPath, timestamp, ConsistencyLevel.ONE);
     }
 
+    public void removeSuperColumn(String keyspace, String columnFamily, String key, String superColumn)
+            throws InvalidRequestException, UnavailableException, TimedOutException, TException {
+        ColumnPath colPath = new ColumnPath(columnFamily);
+        colPath.setSuper_column(superColumn.getBytes());
+        long timestamp = System.currentTimeMillis() * 1000;
+        client.remove(keyspace, key, colPath, timestamp, ConsistencyLevel.ONE);
+    }
+
     public void removeColumn(String keyspace, String columnFamily, String key, String column)
             throws InvalidRequestException, UnavailableException, TimedOutException, TException {
         ColumnPath colPath = new ColumnPath(columnFamily);

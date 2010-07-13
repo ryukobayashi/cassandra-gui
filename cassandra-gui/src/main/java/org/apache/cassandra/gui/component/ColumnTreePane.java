@@ -67,32 +67,57 @@ public class ColumnTreePane extends JPanel {
                 if (status == JOptionPane.YES_OPTION) {
                     try {
                         if (unit instanceof Key) {
+                            Key k = (Key) unit;
+                            client.removeKey(keyspace, columnFamily, k.getName());
+
+                            node.removeAllChildren();
+                            treeModel.reload(node);
                         } else if (unit instanceof SColumn) {
+                            SColumn s = (SColumn) unit;
+                            Key k = (Key) s.getParent();
+                            client.removeSuperColumn(keyspace, columnFamily, k.getName(), s.getName());
+                            k.getSColumns().remove(s.getName());
+
+                            removeNode((DefaultMutableTreeNode) node.getParent(), node);
                         } else {
                             Cell c = (Cell) unit;
                             Unit parent = c.getParent();
                             if (parent instanceof Key) {
                                 Key k = (Key) parent;
                                 client.removeColumn(keyspace, columnFamily, k.getName(), c.getName());
+                                k.getCells().remove(c.getName());
+
+                                removeNode((DefaultMutableTreeNode) node.getParent(), node);
                             } else if (parent instanceof SColumn) {
                                 SColumn s = (SColumn) parent;
                                 Key k = (Key) s.getParent();
                                 client.removeColumn(keyspace, columnFamily, k.getName(), s.getName(), c.getName());
+                                s.getCells().remove(c.getName());
+
+                                DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+                                removeNode(parentNode, node);
+
+                                if (s.getCells().isEmpty()) {
+                                    k.getSColumns().remove(s.getName());
+                                    removeNode((DefaultMutableTreeNode) parentNode.getParent(), parentNode);
+                                }
                             }
                         }
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
                         e.printStackTrace();
                     }
-
-                    DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
-                    if (parentNode != null) {
-                        parentNode.remove(node);
-                        treeModel.reload(parentNode);
-                    }
                 }
 
                 break;
+            }
+        }
+
+        private void removeNode(DefaultMutableTreeNode parentNode,
+                                DefaultMutableTreeNode node) {
+            if (parentNode != null && node != null) {
+                node.removeFromParent();
+                treeModel.reload(parentNode);
             }
         }
 
@@ -121,10 +146,14 @@ public class ColumnTreePane extends JPanel {
                     (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
                 Unit u = unitMap.get(node);
                 if (node != null && u != null) {
+                    JPopupMenu popup = new JPopupMenu();
                     if (u instanceof Key) {
+                        popup.add(new PopupAction("remove", PopupAction.OPERATION_REMOVE, node, u));
+                        popup.show(e.getComponent(), e.getX(), e.getY());
                     } else if (u instanceof SColumn) {
+                        popup.add(new PopupAction("remove", PopupAction.OPERATION_REMOVE, node, u));
+                        popup.show(e.getComponent(), e.getX(), e.getY());
                     } else if (u instanceof Cell) {
-                        JPopupMenu popup = new JPopupMenu();
                         popup.add(new PopupAction("properties", PopupAction.OPERATION_PROPERTIES, node, u));
                         popup.add(new PopupAction("remove", PopupAction.OPERATION_REMOVE, node, u));
                         popup.show(e.getComponent(), e.getX(), e.getY());
