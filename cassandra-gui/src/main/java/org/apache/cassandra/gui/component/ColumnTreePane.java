@@ -39,12 +39,12 @@ public class ColumnTreePane extends JPanel {
 
         private int operation;
         private DefaultMutableTreeNode node;
-        private Cell c;
+        private Unit unit;
 
-        public PopupAction(String name,int operation, DefaultMutableTreeNode node, Cell c) {
+        public PopupAction(String name,int operation, DefaultMutableTreeNode node, Unit unit) {
             this.operation = operation;
             this.node = node;
-            this.c = c;
+            this.unit = unit;
             putValue(Action.NAME, name);
         }
 
@@ -52,39 +52,58 @@ public class ColumnTreePane extends JPanel {
         public void actionPerformed(ActionEvent ae) {
             switch (operation) {
             case OPERATION_PROPERTIES:
-                CellPropertiesDlg cpdlg = new CellPropertiesDlg(c.getName(), c.getValue());
-                cpdlg.setVisible(true);
+                if (unit instanceof Cell) {
+                    Cell c = (Cell) unit;
+                    CellPropertiesDlg cpdlg = new CellPropertiesDlg(c.getName(), c.getValue());
+                    cpdlg.setVisible(true);
+                }
                 break;
             case OPERATION_REMOVE:
                 int status = JOptionPane.showConfirmDialog(null,
-                                                           "Delete a column " + c.getName() + "?",
+                                                           "Delete a column " + getName() + "?",
                                                            "confirm",
                                                            JOptionPane.YES_NO_OPTION,
                                                            JOptionPane.QUESTION_MESSAGE);
                 if (status == JOptionPane.YES_OPTION) {
                     try {
-                        Unit parent = c.getParent();
-                        if (parent instanceof Key) {
-                            Key k = (Key) parent;
-                            client.removeColumn(keyspace, columnFamily, k.getName(), c.getName());
-                        } else if (parent instanceof SColumn) {
-                            SColumn s = (SColumn) parent;
-                            Key k = (Key) s.getParent();
-                            client.removeColumn(keyspace, columnFamily, k.getName(), s.getName(), c.getName());
-                        }
-                        DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
-                        if (parentNode != null) {
-                            parentNode.remove(node);
-                            treeModel.reload(parentNode);
+                        if (unit instanceof Key) {
+                        } else if (unit instanceof SColumn) {
+                        } else {
+                            Cell c = (Cell) unit;
+                            Unit parent = c.getParent();
+                            if (parent instanceof Key) {
+                                Key k = (Key) parent;
+                                client.removeColumn(keyspace, columnFamily, k.getName(), c.getName());
+                            } else if (parent instanceof SColumn) {
+                                SColumn s = (SColumn) parent;
+                                Key k = (Key) s.getParent();
+                                client.removeColumn(keyspace, columnFamily, k.getName(), s.getName(), c.getName());
+                            }
                         }
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
                         e.printStackTrace();
                     }
+
+                    DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+                    if (parentNode != null) {
+                        parentNode.remove(node);
+                        treeModel.reload(parentNode);
+                    }
                 }
 
                 break;
             }
+        }
+
+        private String getName() {
+            if (unit instanceof Key) {
+                return ((Key) unit).getName();
+            } else if (unit instanceof SColumn) {
+                return ((SColumn) unit).getName();
+            }
+
+            return ((Cell) unit).getName();
         }
     }
 
@@ -100,12 +119,16 @@ public class ColumnTreePane extends JPanel {
                 tree.setSelectionPath(path);
                 DefaultMutableTreeNode node =
                     (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-                Cell c = cellMap.get(node);
-                if (node != null && node.getChildCount() == 0 && c != null) {
-                    JPopupMenu popup = new JPopupMenu();
-                    popup.add(new PopupAction("properties", PopupAction.OPERATION_PROPERTIES, node, c));
-                    popup.add(new PopupAction("remove", PopupAction.OPERATION_REMOVE, node, c));
-                    popup.show(e.getComponent(), e.getX(), e.getY());
+                Unit u = unitMap.get(node);
+                if (node != null && u != null) {
+                    if (u instanceof Key) {
+                    } else if (u instanceof SColumn) {
+                    } else if (u instanceof Cell) {
+                        JPopupMenu popup = new JPopupMenu();
+                        popup.add(new PopupAction("properties", PopupAction.OPERATION_PROPERTIES, node, u));
+                        popup.add(new PopupAction("remove", PopupAction.OPERATION_REMOVE, node, u));
+                        popup.show(e.getComponent(), e.getX(), e.getY());
+                    }
                 }
             }
         }
@@ -123,7 +146,7 @@ public class ColumnTreePane extends JPanel {
     private JTree tree;
     private DefaultTreeModel treeModel;
 
-    private Map<DefaultMutableTreeNode, Cell> cellMap = new HashMap<DefaultMutableTreeNode, Cell>();
+    private Map<DefaultMutableTreeNode, Unit> unitMap = new HashMap<DefaultMutableTreeNode, Unit>();
 
     public ColumnTreePane(Client client) {
         this.client = client;
@@ -162,17 +185,19 @@ public class ColumnTreePane extends JPanel {
                 Key k = l.get(keyName);
                 DefaultMutableTreeNode keyNode = new DefaultMutableTreeNode(k.getName());
                 columnFamilyNode.add(keyNode);
+                unitMap.put(keyNode, k);
                 if (k.isSuperColumn()) {
                     for (String sName : k.getSColumns().keySet()) {
                         SColumn sc = k.getSColumns().get(sName);
                         DefaultMutableTreeNode scNode = new DefaultMutableTreeNode(sc.getName());
                         keyNode.add(scNode);
+                        unitMap.put(scNode, sc);
                         for (String cName : sc.getCells().keySet()) {
                             Cell c = sc.getCells().get(cName);
                             DefaultMutableTreeNode cellNode =
                                 new DefaultMutableTreeNode(c.getName() + "=" + c.getValue() + ", " + DATE_FORMAT.format(c.getDate()));
                             scNode.add(cellNode);
-                            cellMap.put(cellNode, c);
+                            unitMap.put(cellNode, c);
                         }
                     }
                 } else {
@@ -181,7 +206,7 @@ public class ColumnTreePane extends JPanel {
                         DefaultMutableTreeNode cellNode =
                             new DefaultMutableTreeNode(c.getName() + "=" + c.getValue() + ", " + DATE_FORMAT.format(c.getDate()));
                         keyNode.add(cellNode);
-                        cellMap.put(cellNode, c);
+                        unitMap.put(cellNode, c);
                     }
                 }
             }
