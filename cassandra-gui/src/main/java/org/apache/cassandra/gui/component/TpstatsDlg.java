@@ -14,7 +14,7 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 
-import org.apache.cassandra.Tpstats;
+import org.apache.cassandra.node.Tpstats;
 
 public class TpstatsDlg extends JDialog {
     private static final long serialVersionUID = -5287379277192919237L;

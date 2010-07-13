@@ -1,20 +1,36 @@
-package org.apache.cassandra;
+package org.apache.cassandra.unit;
 
 import java.io.Serializable;
 import java.util.Map;
 
-public class SColumn implements Serializable {
+public class SColumn implements Unit, Serializable {
     private static final long serialVersionUID = -8041985483479505351L;
 
+    private Unit parent;
     private String name;
     private Map<String, Cell> cells;
 
     public SColumn() {
     }
 
-    public SColumn(String name, Map<String, Cell> cells) {
+    public SColumn(Unit parent, String name, Map<String, Cell> cells) {
+        this.parent = parent;
         this.name = name;
         this.cells = cells;
+    }
+
+    /**
+     * @return the parent
+     */
+    public Unit getParent() {
+        return parent;
+    }
+
+    /**
+     * @param parent the parent to set
+     */
+    public void setParent(Unit parent) {
+        this.parent = parent;
     }
 
     /**

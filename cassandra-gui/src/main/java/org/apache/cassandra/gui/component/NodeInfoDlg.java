@@ -12,7 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import org.apache.cassandra.NodeInfo;
+import org.apache.cassandra.node.NodeInfo;
 
 public class NodeInfoDlg extends JDialog {
     private static final long serialVersionUID = -5238189165348274251L;

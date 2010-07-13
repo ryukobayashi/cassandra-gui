@@ -21,11 +21,12 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
-import org.apache.cassandra.Cell;
-import org.apache.cassandra.Key;
-import org.apache.cassandra.SColumn;
 import org.apache.cassandra.client.Client;
 import org.apache.cassandra.gui.control.callback.RepaintCallback;
+import org.apache.cassandra.unit.Cell;
+import org.apache.cassandra.unit.Key;
+import org.apache.cassandra.unit.SColumn;
+import org.apache.cassandra.unit.Unit;
 
 public class ColumnTreePane extends JPanel {
     private static final long serialVersionUID = -4236268406209844637L;
@@ -62,7 +63,15 @@ public class ColumnTreePane extends JPanel {
                                                            JOptionPane.QUESTION_MESSAGE);
                 if (status == JOptionPane.YES_OPTION) {
                     try {
-                        client.removeColumn(keyspace, columnFamily, c.getKey().getName(), c.getName());
+                        Unit parent = c.getParent();
+                        if (parent instanceof Key) {
+                            Key k = (Key) parent;
+                            client.removeColumn(keyspace, columnFamily, k.getName(), c.getName());
+                        } else if (parent instanceof SColumn) {
+                            SColumn s = (SColumn) parent;
+                            Key k = (Key) s.getParent();
+                            client.removeColumn(keyspace, columnFamily, k.getName(), s.getName(), c.getName());
+                        }
                         DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
                         if (parentNode != null) {
                             parentNode.remove(node);

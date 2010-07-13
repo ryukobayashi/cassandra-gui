@@ -22,11 +22,11 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 
-import org.apache.cassandra.NodeInfo;
-import org.apache.cassandra.RingNode;
-import org.apache.cassandra.Tpstats;
 import org.apache.cassandra.client.Client;
 import org.apache.cassandra.dht.Range;
+import org.apache.cassandra.node.NodeInfo;
+import org.apache.cassandra.node.RingNode;
+import org.apache.cassandra.node.Tpstats;
 
 import edu.uci.ics.jung.graph.ArchetypeVertex;
 import edu.uci.ics.jung.graph.Vertex;

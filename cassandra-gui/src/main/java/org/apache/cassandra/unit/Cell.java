@@ -1,12 +1,12 @@
-package org.apache.cassandra;
+package org.apache.cassandra.unit;
 
 import java.io.Serializable;
 import java.util.Date;
 
-public class Cell implements Serializable {
+public class Cell implements Unit, Serializable {
     private static final long serialVersionUID = 4517336493185234248L;
 
-    private Key key;
+    private Unit parent;
     private String name;
     private String value;
     private Date date;
@@ -14,25 +14,25 @@ public class Cell implements Serializable {
     public Cell() {
     }
 
-    public Cell(Key key, String name, String value, Date date) {
-        this.key = key;
+    public Cell(Unit parent, String name, String value, Date date) {
+        this.parent = parent;
         this.name = name;
         this.value = value;
         this.date = date;
     }
 
     /**
-     * @return the key
+     * @return the parent
      */
-    public Key getKey() {
-        return key;
+    public Unit getParent() {
+        return parent;
     }
 
     /**
-     * @param key the key to set
+     * @param parent the parent to set
      */
-    public void setKey(Key key) {
-        this.key = key;
+    public void setParent(Unit parent) {
+        this.parent = parent;
     }
 
     /**

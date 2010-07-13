@@ -1,4 +1,4 @@
-package org.apache.cassandra;
+package org.apache.cassandra.node;
 
 import java.io.Serializable;
 

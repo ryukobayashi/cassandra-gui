@@ -13,14 +13,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.apache.cassandra.Cell;
-import org.apache.cassandra.Key;
-import org.apache.cassandra.NodeInfo;
-import org.apache.cassandra.RingNode;
-import org.apache.cassandra.SColumn;
-import org.apache.cassandra.Tpstats;
 import org.apache.cassandra.concurrent.IExecutorMBean;
 import org.apache.cassandra.dht.Range;
+import org.apache.cassandra.node.NodeInfo;
+import org.apache.cassandra.node.RingNode;
+import org.apache.cassandra.node.Tpstats;
 import org.apache.cassandra.thrift.Cassandra;
 import org.apache.cassandra.thrift.Column;
 import org.apache.cassandra.thrift.ColumnOrSuperColumn;
@@ -38,6 +35,9 @@ import org.apache.cassandra.thrift.TimedOutException;
 import org.apache.cassandra.thrift.TokenRange;
 import org.apache.cassandra.thrift.UnavailableException;
 import org.apache.cassandra.tools.NodeProbe;
+import org.apache.cassandra.unit.Cell;
+import org.apache.cassandra.unit.Key;
+import org.apache.cassandra.unit.SColumn;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -218,7 +218,7 @@ public class Client {
         client.remove(keyspace, key, colPath, timestamp, ConsistencyLevel.ONE);
     }
 
-    public void removeColumnOnSuperColumn(String keyspace, String columnFamily, String key, String superColumn, String column)
+    public void removeColumn(String keyspace, String columnFamily, String key, String superColumn, String column)
             throws InvalidRequestException, UnavailableException, TimedOutException, TException {
         ColumnPath colPath = new ColumnPath(columnFamily);
         colPath.setSuper_column(superColumn.getBytes());
@@ -253,9 +253,9 @@ public class Client {
                 key.setSuperColumn(columns.isSetSuper_column());
                 if (columns.isSetSuper_column()) {
                     SuperColumn scol = columns.getSuper_column();
-                    SColumn s = new SColumn(new String(scol.getName(), "UTF8"), new TreeMap<String, Cell>());
+                    SColumn s = new SColumn(key, new String(scol.getName(), "UTF8"), new TreeMap<String, Cell>());
                     for (Column col : scol.getColumns()) {
-                        Cell c = new Cell(key,
+                        Cell c = new Cell(s,
                                           new String(col.getName(), "UTF8"),
                                           new String(col.getValue(), "UTF8"),
                                           new Date(col.getTimestamp() / 1000));
