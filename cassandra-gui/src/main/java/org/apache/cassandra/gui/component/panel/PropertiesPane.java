@@ -1,4 +1,4 @@
-package org.apache.cassandra.gui.component;
+package org.apache.cassandra.gui.component.panel;
 
 import java.awt.Dimension;
 import java.awt.Point;
@@ -14,6 +14,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 
 import org.apache.cassandra.client.Client;
+import org.apache.cassandra.gui.component.dialog.RingDlg;
+import org.apache.cassandra.gui.component.dialog.ShowConfigDlg;
 import org.apache.cassandra.gui.control.callback.RepaintCallback;
 
 public class PropertiesPane extends JPanel {

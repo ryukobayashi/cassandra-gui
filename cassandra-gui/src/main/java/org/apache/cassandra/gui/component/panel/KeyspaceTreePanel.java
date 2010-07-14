@@ -1,4 +1,4 @@
-package org.apache.cassandra.gui.component;
+package org.apache.cassandra.gui.component.panel;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -25,6 +25,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.apache.cassandra.client.Client;
+import org.apache.cassandra.gui.component.dialog.KeyRangeDlg;
 import org.apache.cassandra.gui.control.callback.PropertiesCallback;
 import org.apache.cassandra.gui.control.callback.RepaintCallback;
 import org.apache.cassandra.gui.control.callback.SelectedColumnFamilyCallback;

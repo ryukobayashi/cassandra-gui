@@ -7,10 +7,10 @@ import java.awt.Toolkit;
 import javax.swing.JFrame;
 import javax.swing.JSplitPane;
 
-import org.apache.cassandra.gui.component.ColumnTreePane;
-import org.apache.cassandra.gui.component.ConnectionDlg;
-import org.apache.cassandra.gui.component.KeyspaceTreePanel;
-import org.apache.cassandra.gui.component.PropertiesPane;
+import org.apache.cassandra.gui.component.dialog.ConnectionDlg;
+import org.apache.cassandra.gui.component.panel.ColumnTreePane;
+import org.apache.cassandra.gui.component.panel.KeyspaceTreePanel;
+import org.apache.cassandra.gui.component.panel.PropertiesPane;
 import org.apache.cassandra.gui.control.callback.PropertiesCallback;
 import org.apache.cassandra.gui.control.callback.RepaintCallback;
 import org.apache.cassandra.gui.control.callback.SelectedColumnFamilyCallback;

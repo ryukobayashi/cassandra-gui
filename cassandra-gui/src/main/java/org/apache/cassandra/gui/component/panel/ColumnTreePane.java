@@ -1,4 +1,4 @@
-package org.apache.cassandra.gui.component;
+package org.apache.cassandra.gui.component.panel;
 
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -22,6 +22,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
 import org.apache.cassandra.client.Client;
+import org.apache.cassandra.gui.component.dialog.CellPropertiesDlg;
 import org.apache.cassandra.gui.control.callback.RepaintCallback;
 import org.apache.cassandra.unit.Cell;
 import org.apache.cassandra.unit.Key;
