@@ -1,0 +1,26 @@
+Cassandra GUI
+=============
+
+What is it?
+-----------
+
+*Cassandra GUI* is a graphical application that allows us to inspect a given
+*Apache Cassandra* database instance. You could use it instead of
+*cassandra-cli* tool.
+
+How do I run it?
+----------------
+
+Simply download *cassandra-gui.jar* and double click on it (on Windows) or
+execute a `java -jar cassandra-gui.jar` on a terminal (on Linux/UNIX).
+
+It will prompt you for the host and port of your Cassandra instance.
+
+Are there instructions?
+-----------------------
+
+The one thing to keep in mind when using this tool is that in order to see the
+records, you must right click on the tree node and select "show 1000 rows".
+As an alternative, you could also double click a column family or press ENTER
+against it on the left panel. The panel on the right hand side should then
+refresh and allow you to explore it.
