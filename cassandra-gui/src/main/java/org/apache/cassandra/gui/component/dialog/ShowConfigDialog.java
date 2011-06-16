@@ -11,10 +11,10 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-public class ShowConfigDlg extends JDialog {
+public class ShowConfigDialog extends JDialog {
     private static final long serialVersionUID = 4532467169901940874L;
 
-    public ShowConfigDlg(String value){
+    public ShowConfigDialog(String value){
         final JTextArea text = new JTextArea();
         text.setText(value);
 

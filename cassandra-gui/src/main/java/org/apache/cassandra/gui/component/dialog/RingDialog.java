@@ -50,7 +50,7 @@ import edu.uci.ics.jung.visualization.control.RotatingGraphMousePlugin;
 import edu.uci.ics.jung.visualization.control.ScalingGraphMousePlugin;
 import edu.uci.ics.jung.visualization.control.TranslatingGraphMousePlugin;
 
-public class RingDlg extends JDialog {
+public class RingDialog extends JDialog {
     private static final long serialVersionUID = 1543749033698969116L;
 
     private static final int NODE_STATUS_UP = 1;
@@ -59,7 +59,7 @@ public class RingDlg extends JDialog {
 
     private Client client;
 
-    public RingDlg(Client client) {
+    public RingDialog(Client client) {
         this.client = client;
 
         JScrollPane scrollPane = new JScrollPane(setupControls());
@@ -215,7 +215,7 @@ public class RingDlg extends JDialog {
                                         NodeInfo ni = client.getNodeInfo(endpointMap.get(vertex));
                                         setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 
-                                        NodeInfoDlg nid = new NodeInfoDlg(ni);
+                                        NodeInfoDialog nid = new NodeInfoDialog(ni);
                                         nid.setVisible(true);
                                     } catch (Exception e) {
                                         JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
@@ -236,7 +236,7 @@ public class RingDlg extends JDialog {
                                         List<Tpstats> l = client.getTpstats(endpoint);
                                         setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 
-                                        TpstatsDlg td = new TpstatsDlg(endpoint, l);
+                                        TpstatsDialog td = new TpstatsDialog(endpoint, l);
                                         td.setVisible(true);
                                     } catch (Exception e) {
                                         JOptionPane.showMessageDialog(null, "error: " + e.getMessage());

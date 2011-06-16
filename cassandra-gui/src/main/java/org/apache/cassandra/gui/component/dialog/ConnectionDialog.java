@@ -16,7 +16,8 @@ import javax.swing.JTextField;
 
 import org.apache.cassandra.client.Client;
 
-public class ConnectionDlg extends JDialog {
+public class ConnectionDialog extends JDialog {
+	
     private static final long serialVersionUID = 8707158056959280058L;
 
     private class EnterAction implements ActionListener {
@@ -26,18 +27,22 @@ public class ConnectionDlg extends JDialog {
         }
     }
 
-    private Client client;
     private JButton ok = new JButton("OK");
     private JTextField hostText = new JTextField();
     private JTextField thriftPortText = new JTextField();
-    private JTextField jmxPortTextField = new JTextField();
+    private JTextField jmxPortText = new JTextField();
+    private boolean wasCancelled = false;
 
-    public ConnectionDlg(JFrame owner){
+    public ConnectionDialog(JFrame owner) {
         super(owner);
+
+        hostText.setText("localhost");
+        thriftPortText.setText(String.valueOf(Client.DEFAULT_THRIFT_PORT));
+        jmxPortText.setText(String.valueOf(Client.DEFAULT_JMX_PORT));
 
         hostText.addActionListener(new EnterAction());
         thriftPortText.addActionListener(new EnterAction());
-        jmxPortTextField.addActionListener(new EnterAction());
+        jmxPortText.addActionListener(new EnterAction());
 
         JPanel inputPanel = new JPanel(new GridLayout(3, 2));
         inputPanel.add(new JLabel("host:"));
@@ -45,7 +50,7 @@ public class ConnectionDlg extends JDialog {
         inputPanel.add(new JLabel("thrift port:"));
         inputPanel.add(thriftPortText);
         inputPanel.add(new JLabel("jmx port:"));
-        inputPanel.add(jmxPortTextField);
+        inputPanel.add(jmxPortText);
 
         ok.addActionListener(new ActionListener() {
             @Override
@@ -57,7 +62,7 @@ public class ConnectionDlg extends JDialog {
         cancel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                client = null;
+            	wasCancelled = true;
                 setVisible(false);
             }
         });
@@ -67,7 +72,7 @@ public class ConnectionDlg extends JDialog {
         buttonPanel.add(cancel);
 
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(new JLabel("connect"), BorderLayout.NORTH);
+        panel.add(new JLabel("Connection settings"), BorderLayout.NORTH);
         panel.add(inputPanel, BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -81,37 +86,27 @@ public class ConnectionDlg extends JDialog {
     }
 
     private void enterAction() {
-        if (hostText.getText().isEmpty()){
-            JOptionPane.showMessageDialog(null, "enter host name.");
+        if (hostText.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Enter host name.");
             return;
         }
-
-        String host = hostText.getText();
-        int thriftPort =
-            thriftPortText.getText().isEmpty() ?
-                    Client.DEFAULT_THRIFT_PORT :
-                    Integer.valueOf(thriftPortText.getText());
-        int jmxPort =
-            jmxPortTextField.getText().isEmpty() ?
-                    Client.DEFAULT_JMX_PORT :
-                    Integer.valueOf(jmxPortTextField.getText());
-
-        client = new Client(host, thriftPort, jmxPort);
-        try {
-            client.connect();
-        } catch (Exception e1) {
-            JOptionPane.showMessageDialog(null, "connection faild.");
-            e1.printStackTrace();
-            return;
-        }
-
         setVisible(false);
     }
 
-    /**
-     * @return the client
-     */
-    public Client getClient() {
-        return client;
+    public String getHost() {
+    	return hostText.getText();
     }
+    
+    public int getThriftPort() {
+    	return Integer.valueOf(thriftPortText.getText());
+    }
+
+    public int getJmxPort() {
+    	return Integer.valueOf(jmxPortText.getText());
+    }
+
+	public boolean wasCancelled() {
+		return wasCancelled;
+	}
+
 }

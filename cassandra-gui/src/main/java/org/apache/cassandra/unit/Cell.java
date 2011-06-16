@@ -3,6 +3,8 @@ package org.apache.cassandra.unit;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+
 public class Cell implements Unit, Serializable {
     private static final long serialVersionUID = 4517336493185234248L;
 
@@ -10,6 +12,7 @@ public class Cell implements Unit, Serializable {
     private String name;
     private String value;
     private Date date;
+    private DefaultMutableTreeNode treeNode;
 
     public Cell() {
     }
@@ -75,5 +78,19 @@ public class Cell implements Unit, Serializable {
      */
     public void setDate(Date date) {
         this.date = date;
+    }
+
+    /**
+     * @return the treeNode
+     */
+    public DefaultMutableTreeNode getTreeNode() {
+        return treeNode;
+    }
+
+    /**
+     * @param treeNode the treeNode to set
+     */
+    public void setTreeNode(DefaultMutableTreeNode treeNode) {
+        this.treeNode = treeNode;
     }
 }

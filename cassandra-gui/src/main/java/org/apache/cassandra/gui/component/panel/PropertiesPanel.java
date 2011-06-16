@@ -1,5 +1,7 @@
 package org.apache.cassandra.gui.component.panel;
 
+import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.MouseAdapter;
@@ -11,15 +13,75 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowSorter;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 
 import org.apache.cassandra.client.Client;
-import org.apache.cassandra.gui.component.dialog.RingDlg;
-import org.apache.cassandra.gui.component.dialog.ShowConfigDlg;
+import org.apache.cassandra.gui.component.dialog.RingDialog;
+import org.apache.cassandra.gui.component.dialog.ShowConfigDialog;
 import org.apache.cassandra.gui.control.callback.RepaintCallback;
 
-public class PropertiesPane extends JPanel {
+public class PropertiesPanel extends JPanel {
     private static final long serialVersionUID = 1452324774722196104L;
+
+    private class Header extends JTableHeader {
+        private static final long serialVersionUID = 6540121946461922362L;
+
+        public Header(TableColumnModel columnModel) {
+            super(columnModel);
+        }
+
+        @Override
+        protected void processMouseEvent(MouseEvent e) {
+            if (e.getID() == MouseEvent.MOUSE_CLICKED &&
+                SwingUtilities.isLeftMouseButton(e)) {
+                Cursor cur = super.getCursor();
+                if (cur.getType() == Cursor.E_RESIZE_CURSOR) {
+                    int cc = e.getClickCount();
+                    if (cc % 2 == 1) {
+                        return;
+                    } else {
+                        Point pt = new Point(e.getX() - 3, e.getY());
+                        int vc = super.columnAtPoint(pt);
+                        if (vc >= 0) {
+                            sizeWidthToFitData(vc);
+                            e.consume();
+                            return;
+                        }
+                    }
+                }
+            }
+            super.processMouseEvent(e);
+        }
+
+        public void sizeWidthToFitData(int vc) {
+            JTable table = super.getTable();
+            TableColumn tc = table.getColumnModel().getColumn(vc);
+
+            int max = 0;
+
+            int vrows = table.getRowCount();
+            for (int i = 0; i < vrows; i++) {
+                TableCellRenderer r = table.getCellRenderer(i, vc);
+                Object value = table.getValueAt(i, vc);
+                Component c = r.getTableCellRendererComponent(table, value, false, false, i, vc);
+                int w = c.getPreferredSize().width;
+                if (max < w) {
+                    max = w;
+                }
+            }
+
+            tc.setPreferredWidth(max + 1);
+        }
+    }
 
     private static final String COLUMN_VERSION = "api version";
     private static final String COLUMN_NUMBER_OF_KEYSPACE = "Number of Keyspace";
@@ -36,8 +98,8 @@ public class PropertiesPane extends JPanel {
     private JTable table;
 
     private DefaultTableModel tableModel;
-    
-    public PropertiesPane(final Client client) {
+
+    public PropertiesPanel(final Client client) {
         this.client = client;
 
         tableModel = new DefaultTableModel(columns, 0) {
@@ -49,7 +111,16 @@ public class PropertiesPane extends JPanel {
             }
         };
 
-        table = new JTable(tableModel);
+        table = new JTable(tableModel) {
+            private static final long serialVersionUID = -5396565496344780783L;
+
+            protected JTableHeader createDefaultTableHeader() {
+                return new Header(super.columnModel);
+            };
+        };
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        RowSorter<TableModel> sorter = new TableRowSorter<TableModel>(table.getModel());
+        table.setRowSorter(sorter);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setAutoCreateRowSorter(true);
         table.addMouseListener(new MouseAdapter() {
@@ -61,10 +132,10 @@ public class PropertiesPane extends JPanel {
                     try {
                         if (tableModel.getValueAt(row, 0).equals(COLUMN_CONFIG_FILE)) {
                             String str = client.getConfigFile();
-                            ShowConfigDlg dlg = new ShowConfigDlg(str);
+                            ShowConfigDialog dlg = new ShowConfigDialog(str);
                             dlg.setVisible(true);
                         } else if (tableModel.getValueAt(row, 0).equals(COLUMN_RING)) {
-                            RingDlg rd = new RingDlg(client);
+                            RingDialog rd = new RingDialog(client);
                             rd.setVisible(true);
                         }
                     } catch (Exception e) {
@@ -75,6 +146,12 @@ public class PropertiesPane extends JPanel {
                 }
             }
         });
+
+        DefaultTableColumnModel columnModel = (DefaultTableColumnModel)table.getColumnModel();
+        for (int i = 0 ; i < columnModel.getColumnCount() ; i++){
+            TableColumn column = columnModel.getColumn(i);
+            column.setPreferredWidth(350);
+        }
 
         scrollPane = new JScrollPane(table);
         add(scrollPane);

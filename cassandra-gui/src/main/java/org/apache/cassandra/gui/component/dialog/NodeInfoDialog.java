@@ -14,10 +14,10 @@ import javax.swing.JScrollPane;
 
 import org.apache.cassandra.node.NodeInfo;
 
-public class NodeInfoDlg extends JDialog {
+public class NodeInfoDialog extends JDialog {
     private static final long serialVersionUID = -5238189165348274251L;
 
-    public NodeInfoDlg(NodeInfo nodeInfo) {
+    public NodeInfoDialog(NodeInfo nodeInfo) {
         JPanel inputPanel = new JPanel(new GridLayout(4, 2));
         inputPanel.add(new JLabel("Load: "));
         inputPanel.add(new JLabel(nodeInfo.getLoad()));

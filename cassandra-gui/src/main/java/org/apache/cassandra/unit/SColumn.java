@@ -3,11 +3,14 @@ package org.apache.cassandra.unit;
 import java.io.Serializable;
 import java.util.Map;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+
 public class SColumn implements Unit, Serializable {
     private static final long serialVersionUID = -8041985483479505351L;
 
     private Unit parent;
     private String name;
+    private DefaultMutableTreeNode treeNode;
     private Map<String, Cell> cells;
 
     public SColumn() {
@@ -45,6 +48,20 @@ public class SColumn implements Unit, Serializable {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * @return the treeNode
+     */
+    public DefaultMutableTreeNode getTreeNode() {
+        return treeNode;
+    }
+
+    /**
+     * @param treeNode the treeNode to set
+     */
+    public void setTreeNode(DefaultMutableTreeNode treeNode) {
+        this.treeNode = treeNode;
     }
 
     /**

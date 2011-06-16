@@ -2,6 +2,8 @@ package org.apache.cassandra.gui.component.panel;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -25,7 +27,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.apache.cassandra.client.Client;
-import org.apache.cassandra.gui.component.dialog.KeyRangeDlg;
+import org.apache.cassandra.gui.component.dialog.KeyDialog;
+import org.apache.cassandra.gui.component.dialog.KeyRangeDialog;
 import org.apache.cassandra.gui.control.callback.PropertiesCallback;
 import org.apache.cassandra.gui.control.callback.RepaintCallback;
 import org.apache.cassandra.gui.control.callback.SelectedColumnFamilyCallback;
@@ -33,46 +36,67 @@ import org.apache.cassandra.thrift.NotFoundException;
 import org.apache.thrift.TException;
 
 public class KeyspaceTreePanel extends JPanel implements TreeSelectionListener {
+	
     private static final long serialVersionUID = 5481365703729222288L;
 
     private class PopupAction extends AbstractAction {
         private static final long serialVersionUID = 4235052996425858520L;
 
+        public static final int OPERATION_ROWS = 1;
+        public static final int OPERATION_KEYRANGE = 2;
+        public static final int OPERATION_KEY = 3;
+
         public static final int ROWS_1000 = 1000;
 
-        private boolean keyRange;
+        private int operation;
 
-        public PopupAction(String name, boolean keyRange) {
-            this.keyRange = keyRange;
+        public PopupAction(String name, int operation) {
+            this.operation = operation;
             putValue(Action.NAME, name);
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (lastSelectedKeysapce == null ||
+            if (lastSelectedKeyspace == null ||
                 lastSelectedColumnFamily == null) {
                 return;
             }
 
-            String startKey = "";
-            String endKey = "";
+            switch (operation) {
+            case OPERATION_ROWS:
+            case OPERATION_KEYRANGE:
+                String startKey = "";
+                String endKey = "";
 
-            if (keyRange) {
-                KeyRangeDlg krd = new KeyRangeDlg();
-                krd.setVisible(true);
-                if (krd.isCancel()) {
+                if (operation == OPERATION_KEYRANGE) {
+                    KeyRangeDialog krd = new KeyRangeDialog();
+                    krd.setVisible(true);
+                    if (krd.isCancel()) {
+                        return;
+                    }
+
+                    startKey = krd.getStartKey();
+                    endKey = krd.getEndKey();
+                }
+
+                cCallback.rangeCallback(lastSelectedKeyspace,
+                                        lastSelectedColumnFamily,
+                                        startKey,
+                                        endKey,
+                                        ROWS_1000);
+                break;
+            case OPERATION_KEY:
+                KeyDialog kd = new KeyDialog();
+                kd.setVisible(true);
+                if (kd.isCancel()) {
                     return;
                 }
 
-                startKey = krd.getStartKey();
-                endKey = krd.getEndKey();
+                cCallback.getCacllback(lastSelectedKeyspace,
+                                       lastSelectedColumnFamily,
+                                       kd.getkey());
+                break;
             }
-
-            cCallback.callback(lastSelectedKeysapce,
-                               lastSelectedColumnFamily,
-                               startKey,
-                               endKey,
-                               ROWS_1000);
         }
     }
 
@@ -90,15 +114,16 @@ public class KeyspaceTreePanel extends JPanel implements TreeSelectionListener {
                     (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
                 if (node != null && node.getChildCount() == 0) {
                     String columnFamily = (String) node.getUserObject();
-                    lastSelectedKeysapce = keyspaceMap.get(columnFamily);
+                    lastSelectedKeyspace = keyspaceMap.get(columnFamily);
                     lastSelectedColumnFamily = columnFamily;
 
                     JPopupMenu popup = new JPopupMenu();
-                    popup.add(new PopupAction("show 1000 rows", false));
-                    popup.add(new PopupAction("key range rows", true));
+                    popup.add(new PopupAction("show 1000 rows", PopupAction.OPERATION_ROWS));
+                    popup.add(new PopupAction("key range rows", PopupAction.OPERATION_KEYRANGE));
+                    popup.add(new PopupAction("get key", PopupAction.OPERATION_KEY));
                     popup.show(e.getComponent(), e.getX(), e.getY());
                 } else {
-                    lastSelectedKeysapce = null;
+                    lastSelectedKeyspace = null;
                     lastSelectedColumnFamily = null;
                 }
             }
@@ -115,7 +140,7 @@ public class KeyspaceTreePanel extends JPanel implements TreeSelectionListener {
 
     private Map<String, String> keyspaceMap = new HashMap<String, String>();
     private JScrollPane scrollPane;
-    private String lastSelectedKeysapce;
+    private String lastSelectedKeyspace;
     private String lastSelectedColumnFamily;
     private JTree tree;
 
@@ -127,7 +152,27 @@ public class KeyspaceTreePanel extends JPanel implements TreeSelectionListener {
             tree.setRootVisible(true);
             tree.addMouseListener(new MousePopup());
             tree.addTreeSelectionListener(this);
-
+            
+            tree.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() > 1) {
+						if (lastSelectedKeyspace != null && lastSelectedColumnFamily != null)
+							cCallback.rangeCallback(lastSelectedKeyspace, lastSelectedColumnFamily, "", "", 100);
+					}
+				}
+			});
+            
+            tree.addKeyListener(new KeyAdapter() {
+				@Override
+				public void keyPressed(KeyEvent e) {
+					if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+						if (lastSelectedKeyspace != null && lastSelectedColumnFamily != null)
+							cCallback.rangeCallback(lastSelectedKeyspace, lastSelectedColumnFamily, "", "", 100);
+					}
+				}
+			});
+            
             List<String> ks = new ArrayList<String>(client.getKeyspaces());
             Collections.sort(ks);
             for (String keyspace : ks) {
@@ -158,8 +203,8 @@ public class KeyspaceTreePanel extends JPanel implements TreeSelectionListener {
 
     @Override
     public void valueChanged(TreeSelectionEvent e) {
-        String keyspace;
-        String columnFamily;
+        String keyspace = null;
+        String columnFamily = null;
 
         switch (e.getPath().getPathCount()) {
         case TREE_CLUSTER:
@@ -175,14 +220,16 @@ public class KeyspaceTreePanel extends JPanel implements TreeSelectionListener {
             propertiesCallback.columnFamilyCallback(keyspace, columnFamily);
             break;
         }
+        
+        lastSelectedKeyspace = keyspace;
+        lastSelectedColumnFamily = columnFamily;
     }
 
     @Override
     public void repaint() {
         if (scrollPane != null && rCallback != null) {
             Dimension d = rCallback.callback();
-            scrollPane.setPreferredSize(new Dimension(d.width - 10,
-                                                      d.height - 10));
+            scrollPane.setPreferredSize(new Dimension(d.width - 10, d.height - 10));
             scrollPane.repaint();
         }
         super.repaint();
@@ -208,4 +255,5 @@ public class KeyspaceTreePanel extends JPanel implements TreeSelectionListener {
     public void setrCallback(RepaintCallback rCallback) {
         this.rCallback = rCallback;
     }
+
 }

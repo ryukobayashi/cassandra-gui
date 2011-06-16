@@ -60,6 +60,10 @@ public class Client {
     private int thriftPort;
     private int jmxPort;
 
+    private String keyspace;
+    private String columnFamily;
+    private boolean superColumn;
+
     public Client() {
         this(DEFAULT_THRIFT_HOST, DEFAULT_THRIFT_PORT, DEFAULT_JMX_PORT);
     }
@@ -115,6 +119,7 @@ public class Client {
 
     public List<TokenRange> describeRing(String keyspace)
             throws TException, InvalidRequestException {
+        this.keyspace = keyspace;
         return client.describe_ring(keyspace);
     }
 
@@ -177,11 +182,15 @@ public class Client {
 
     public Map<String, String> getColumnFamily(String keyspace, String columnFamily)
                 throws NotFoundException, TException {
+        this.keyspace = keyspace;
+        this.columnFamily = columnFamily;
         return client.describe_keyspace(keyspace).get(columnFamily);
     }
 
     public Set<String> getColumnFamilys(String keyspace)
             throws NotFoundException, TException {
+        this.keyspace = keyspace;
+
         Set<String> s = new TreeSet<String>();
         for (Map.Entry<String, Map<String, String>> entry : client.describe_keyspace(keyspace).entrySet()) {
             s.add(entry.getKey());
@@ -192,19 +201,49 @@ public class Client {
 
     public int countColumnsRecord(String keyspace, String columnFamily, String key)
             throws InvalidRequestException, UnavailableException, TimedOutException, TException {
+        this.keyspace = keyspace;
+        this.columnFamily = columnFamily;
+
         ColumnParent colParent = new ColumnParent(columnFamily);
         return client.get_count(keyspace, key, colParent, ConsistencyLevel.ONE);
     }
 
     public int countSuperColumnsRecord(String keyspace, String columnFamily, String superColumn, String key)
             throws InvalidRequestException, UnavailableException, TimedOutException, TException {
+        this.keyspace = keyspace;
+        this.columnFamily = columnFamily;
+
         ColumnParent colParent = new ColumnParent(columnFamily);
         colParent.setSuper_column(superColumn.getBytes());
         return client.get_count(keyspace, key, colParent, ConsistencyLevel.ONE);
     }
 
+    public Date insertColumn(String keyspace,
+                             String columnFamily,
+                             String key,
+                             String superColumn,
+                             String column,
+                             String value)
+            throws InvalidRequestException, UnavailableException, TimedOutException, TException {
+        this.keyspace = keyspace;
+        this.columnFamily = columnFamily;
+
+        ColumnPath colPath = new ColumnPath(columnFamily);
+        if (superColumn != null) {
+            colPath.setSuper_column(superColumn.getBytes());
+        }
+        colPath.setColumn(column.getBytes());
+        long timestamp = System.currentTimeMillis() * 1000;
+        client.insert(keyspace, key, colPath, value.getBytes(), timestamp, ConsistencyLevel.ONE);
+
+        return new Date(timestamp / 1000);
+    }
+
     public void removeKey(String keyspace, String columnFamily, String key)
             throws InvalidRequestException, UnavailableException, TimedOutException, TException {
+        this.keyspace = keyspace;
+        this.columnFamily = columnFamily;
+
         ColumnPath colPath = new ColumnPath(columnFamily);
         long timestamp = System.currentTimeMillis() * 1000;
         client.remove(keyspace, key, colPath, timestamp, ConsistencyLevel.ONE);
@@ -220,6 +259,9 @@ public class Client {
 
     public void removeColumn(String keyspace, String columnFamily, String key, String column)
             throws InvalidRequestException, UnavailableException, TimedOutException, TException {
+        this.keyspace = keyspace;
+        this.columnFamily = columnFamily;
+
         ColumnPath colPath = new ColumnPath(columnFamily);
         colPath.setColumn(column.getBytes());
         long timestamp = System.currentTimeMillis() * 1000;
@@ -228,6 +270,9 @@ public class Client {
 
     public void removeColumn(String keyspace, String columnFamily, String key, String superColumn, String column)
             throws InvalidRequestException, UnavailableException, TimedOutException, TException {
+        this.keyspace = keyspace;
+        this.columnFamily = columnFamily;
+
         ColumnPath colPath = new ColumnPath(columnFamily);
         colPath.setSuper_column(superColumn.getBytes());
         colPath.setColumn(column.getBytes());
@@ -235,9 +280,64 @@ public class Client {
         client.remove(keyspace, key, colPath, timestamp, ConsistencyLevel.ONE);
     }
 
+    public Map<String, Key> getKey(String keyspace, String columnFamily, String superColumn, String key)
+            throws InvalidRequestException, UnavailableException, TimedOutException, TException, UnsupportedEncodingException {
+        this.keyspace = keyspace;
+        this.columnFamily = columnFamily;
+
+        Map<String, Key> m = new TreeMap<String, Key>();
+
+        ColumnParent columnParent = new ColumnParent(columnFamily);
+        if (superColumn != null) {
+            columnParent.setSuper_column(superColumn.getBytes());
+        }
+
+        SliceRange sliceRange = new SliceRange();
+        sliceRange.setStart(new byte[0]);
+        sliceRange.setFinish(new byte[0]);
+
+        SlicePredicate slicePredicate = new SlicePredicate();
+        slicePredicate.setSlice_range(sliceRange);
+
+        List<ColumnOrSuperColumn> l =
+            client.get_slice(keyspace, key, columnParent, slicePredicate, ConsistencyLevel.ONE);
+
+        Key k = new Key(key, new TreeMap<String, SColumn>(), new TreeMap<String, Cell>());
+        for (ColumnOrSuperColumn column : l) {
+            k.setSuperColumn(column.isSetSuper_column());
+            if (column.isSetSuper_column()) {
+                SuperColumn scol = column.getSuper_column();
+                SColumn s = new SColumn(k, new String(scol.getName(), "UTF8"), new TreeMap<String, Cell>());
+                for (Column col : scol.getColumns()) {
+                    Cell c = new Cell(s,
+                                      new String(col.getName(), "UTF8"),
+                                      new String(col.getValue(), "UTF8"),
+                                      new Date(col.getTimestamp() / 1000));
+                    s.getCells().put(c.getName(), c);
+                }
+
+                k.getSColumns().put(s.getName(), s);
+            } else {
+                Column col = column.getColumn();
+                Cell c = new Cell(k,
+                                  new String(col.getName(), "UTF8"),
+                                  new String(col.getValue(), "UTF8"),
+                                  new Date(col.getTimestamp() / 1000));
+                k.getCells().put(c.getName(), c);
+            }
+
+            m.put(k.getName(), k);
+        }
+
+        return m; 
+    }
+
     public Map<String, Key> listKeyAndValues(String keyspace, String columnFamily, String startKey, String endKey, int rows)
             throws InvalidRequestException, UnavailableException, TimedOutException, TException, UnsupportedEncodingException {
-        Map<String, Key> l = new TreeMap<String, Key>();
+        this.keyspace = keyspace;
+        this.columnFamily = columnFamily;
+
+        Map<String, Key> m = new TreeMap<String, Key>();
 
         ColumnParent columnParent = new ColumnParent(columnFamily);
 
@@ -257,10 +357,10 @@ public class Client {
         for (KeySlice keySlice : keySlices) {
             Key key = new Key(keySlice.getKey(), new TreeMap<String, SColumn>(), new TreeMap<String, Cell>());
 
-            for (ColumnOrSuperColumn columns : keySlice.getColumns()) {
-                key.setSuperColumn(columns.isSetSuper_column());
-                if (columns.isSetSuper_column()) {
-                    SuperColumn scol = columns.getSuper_column();
+            for (ColumnOrSuperColumn column : keySlice.getColumns()) {
+                key.setSuperColumn(column.isSetSuper_column());
+                if (column.isSetSuper_column()) {
+                    SuperColumn scol = column.getSuper_column();
                     SColumn s = new SColumn(key, new String(scol.getName(), "UTF8"), new TreeMap<String, Cell>());
                     for (Column col : scol.getColumns()) {
                         Cell c = new Cell(s,
@@ -272,7 +372,7 @@ public class Client {
 
                     key.getSColumns().put(s.getName(), s);
                 } else {
-                    Column col = columns.getColumn();
+                    Column col = column.getColumn();
                     Cell c = new Cell(key,
                                       new String(col.getName(), "UTF8"),
                                       new String(col.getValue(), "UTF8"),
@@ -281,9 +381,51 @@ public class Client {
                 }
             }
 
-            l.put(key.getName(), key);
+            m.put(key.getName(), key);
         }
 
-        return l;
+        return m;
+    }
+
+    /**
+     * @return the keyspace
+     */
+    public String getKeyspace() {
+        return keyspace;
+    }
+
+    /**
+     * @param keyspace the keyspace to set
+     */
+    public void setKeyspace(String keyspace) {
+        this.keyspace = keyspace;
+    }
+
+    /**
+     * @return the columnFamily
+     */
+    public String getColumnFamily() {
+        return columnFamily;
+    }
+
+    /**
+     * @param columnFamily the columnFamily to set
+     */
+    public void setColumnFamily(String columnFamily) {
+        this.columnFamily = columnFamily;
+    }
+
+    /**
+     * @return the superColumn
+     */
+    public boolean isSuperColumn() {
+        return superColumn;
+    }
+
+    /**
+     * @param superColumn the superColumn to set
+     */
+    public void setSuperColumn(boolean superColumn) {
+        this.superColumn = superColumn;
     }
 }

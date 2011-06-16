@@ -16,12 +16,12 @@ import javax.swing.table.DefaultTableModel;
 
 import org.apache.cassandra.node.Tpstats;
 
-public class TpstatsDlg extends JDialog {
+public class TpstatsDialog extends JDialog {
     private static final long serialVersionUID = -5287379277192919237L;
 
     private static final String[] columns = {"Pool Name", "Active", "Pending", "Completed"};
 
-    public TpstatsDlg(String endpoint, List<Tpstats> l) {
+    public TpstatsDialog(String endpoint, List<Tpstats> l) {
         final DefaultTableModel tableModel= new DefaultTableModel(columns, 0) {
             private static final long serialVersionUID = 7088445834198028640L;
 

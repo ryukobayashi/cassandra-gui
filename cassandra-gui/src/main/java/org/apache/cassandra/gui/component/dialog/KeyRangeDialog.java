@@ -13,14 +13,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-public class KeyRangeDlg extends JDialog {
+public class KeyRangeDialog extends JDialog {
     private static final long serialVersionUID = -7378362468372008181L;
 
     private boolean cancel = true;
     private String startKey;
     private String endKey;
 
-    public KeyRangeDlg(){
+    public KeyRangeDialog(){
         final JTextField startKeyText = new JTextField();
         final JTextField endKeyText = new JTextField();
 
